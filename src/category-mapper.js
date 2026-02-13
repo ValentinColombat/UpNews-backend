@@ -131,11 +131,9 @@ export async function categorizeArticle(article) {
 export function groupArticlesByCategory(articles) {
   const grouped = {
     ecologie: [],
-    social: [],
-    tech: [],
     santé: [],
-    culture: [],
-    science: [],
+    'sciences-et-tech': [],
+    'social-et-culture': [],
     uncategorized: []
   };
 

@@ -3,3 +3,4 @@ node_modules/
 *.log
 logs/
 .DS_Store
+src/config/google-cloud-credentials.json

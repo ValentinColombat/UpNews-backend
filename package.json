@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
-  
   "scripts": {
     "start": "node src/index.js",
     "test": "node test-claude.js"
@@ -14,6 +13,8 @@
   "description": "",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
+    "@google-cloud/aiplatform": "^6.2.0",
+    "@google-cloud/text-to-speech": "^6.4.0",
     "@supabase/supabase-js": "^2.86.2",
     "dotenv": "^17.2.3",
     "rss-parser": "^3.13.0"

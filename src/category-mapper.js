@@ -23,29 +23,6 @@ async function loadMappingConfig() {
   return mappingConfig;
 }
 
-// Logger les catégorisations pour analyse
-async function logCategorization(article, category, method, confidence) {
-  const logDir = './logs';
-  const logFile = join(logDir, 'categorization.log');
-
-  if (!existsSync(logDir)) {
-    await mkdir(logDir, { recursive: true });
-  }
-
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    title: article.title,
-    sourceCategory: article.category,
-    assignedCategory: category,
-    method: method,
-    confidence: confidence,
-    source: article.source,
-    url: article.url
-  };
-
-  await appendFile(logFile, JSON.stringify(logEntry) + '\n');
-}
-
 // Logger les mismatches entre mots-clés et Claude pour ajuster les mots-clés
 export async function logCategoryMismatch(article, keywordCategory, claudeCategory) {
   const logDir = './logs';
@@ -233,9 +210,6 @@ export async function categorizeArticle(article) {
   if (!result) {
     result = await categorizeWithClaude(article);
   }
-
-  // Logger la catégorisation
-  await logCategorization(article, result.category, result.method, result.confidence);
 
   return {
     category: result.category,

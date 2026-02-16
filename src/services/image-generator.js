@@ -20,7 +20,7 @@ MISSION : Créer un prompt visuel court (1 phrase, max 15 mots) pour illustrer c
 ARTICLE :
 ${article.content.substring(0, 1500)}
 
-CATÉGORIE : ${article.category || 'Actualités'}
+CATÉGORIE : ${article.appCategory || 'Actualités'}
 
 CONTRAINTES :
 - Décris une SCÈNE VISUELLE concrète (pas de concepts abstraits)

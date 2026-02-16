@@ -18,26 +18,13 @@ export async function fetchLatestNews() {
       const feed = await parser.parseURL(source.url);
 
       // Prendre les 3 articles les plus récents de chaque source
-      const recentItems = feed.items.slice(0, 3).map(item => {
-        // Essayer de récupérer la vraie catégorie de l'article
-        let articleCategory = 'absent';
-
-        if (item.categories && item.categories.length > 0) {
-          // Chercher si une catégorie existe dans les métadonnées.
-          articleCategory = item.categories[0];
-        } else if (item.category) {
-          articleCategory = item.category;
-        }
-
-        return {
+      const recentItems = feed.items.slice(0, 3).map(item => ({
           title: item.title,
           description: item.contentSnippet || item.description || item.summary || '',
           url: item.link,
           source: source.name,
-          category: articleCategory, // Catégorie réelle de l'article ou "absent"
           pubDate: item.pubDate || new Date().toISOString()
-        };
-      });
+      }));
 
       allNews.push(...recentItems);
       console.log(`  ${source.name}: ${recentItems.length} articles`);

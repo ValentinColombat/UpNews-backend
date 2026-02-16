@@ -1,0 +1,36 @@
+name: Daily News Generation
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 4h00 heure française (UTC+1)
+  workflow_dispatch: # permet le déclenchement manuel
+
+jobs:
+  generate-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Google credentials
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > src/config/google-cloud-credentials.json
+
+      - name: Run news generation
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: src/config/google-cloud-credentials.json
+          GOOGLE_CLOUD_PROJECT_ID: upnews-auth
+        run: node src/index.js

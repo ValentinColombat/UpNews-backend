@@ -140,8 +140,7 @@ async function generateDailyArticles() {
       console.log(`Score de positivité: ${newsItem.positivityScore}/100`);
       console.log(`Raison: ${newsItem.positivityReason}`);
       console.log(`Source: ${newsItem.source}`);
-      console.log(`Catégorie initiale (RSS): ${newsItem.category || 'non définie'}`);
-      console.log(`Catégorie assignée (app): ${category}`);
+      console.log(`Catégorie: ${category}`);
 
       // Choisir un prompt aléatoire
       const randomPrompt = promptTypes[Math.floor(Math.random() * promptTypes.length)];

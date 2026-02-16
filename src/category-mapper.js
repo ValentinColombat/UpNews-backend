@@ -42,7 +42,6 @@ export async function logCategoryMismatch(article, keywordCategory, claudeCatego
     claudeCategory: claudeCategory
   };
 
-  console.log(`  MISMATCH: mots-clés="${keywordCategory}" vs Claude="${claudeCategory}" pour "${article.title.substring(0, 60)}..."`);
   await appendFile(logFile, JSON.stringify(logEntry) + '\n');
 }
 
@@ -139,18 +138,16 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown) :
     const response = JSON.parse(cleanJsonResponse(message.content[0].text));
 
     if (!VALID_CATEGORIES.includes(response.category)) {
-      console.warn(`  Claude a retourné une catégorie invalide: "${response.category}", fallback uncategorized`);
       return { category: 'uncategorized', method: 'claude_categorization', confidence: 'low' };
     }
 
-    console.log(`  Claude categorization: "${response.category}" (${response.raison})`);
     return {
       category: response.category,
       method: 'claude_categorization',
       confidence: 'high'
     };
   } catch (error) {
-    console.error(`  Erreur Claude categorization: ${error.message}`);
+    console.error(`Erreur Claude categorization: ${error.message}`);
     return { category: 'uncategorized', method: 'claude_categorization_error', confidence: 'low' };
   }
 }
@@ -186,14 +183,13 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown) :
 
     const response = JSON.parse(cleanJsonResponse(message.content[0].text));
 
-    console.log(`  Vérification Claude: ${response.confirmed ? 'CONFIRMÉ' : 'REJETÉ'} (${response.raison})`);
     return {
       confirmed: response.confirmed,
       suggestedCategory: response.suggestedCategory || keywordCategory,
       raison: response.raison
     };
   } catch (error) {
-    console.error(`  Erreur vérification Claude: ${error.message}`);
+    console.error(`Erreur vérification Claude: ${error.message}`);
     // En cas d'erreur, on fait confiance aux mots-clés
     return { confirmed: true, suggestedCategory: keywordCategory, raison: 'Erreur API - confiance mots-clés par défaut' };
   }

@@ -43,12 +43,18 @@ export async function categorizeAndGroupNews(newsList) {
   console.log('\nCatégorisation des articles...');
 
   // Catégoriser chaque article avec le mapping statique
+  let claudeCount = 0;
+  let keywordCount = 0;
   for (const article of newsList) {
     const result = await categorizeArticle(article);
     article.appCategory = result.category;
     article.categoryConfidence = result.confidence;
     article.categoryMethod = result.method;
+    if (result.method === 'claude_categorization') claudeCount++;
+    else if (result.method === 'keyword_match') keywordCount++;
   }
+
+  console.log(`Catégorisation terminée: ${keywordCount} par mots-clés, ${claudeCount} par Claude (sur ${newsList.length} articles)`);
 
   // Grouper par catégorie
   const grouped = groupArticlesByCategory(newsList);

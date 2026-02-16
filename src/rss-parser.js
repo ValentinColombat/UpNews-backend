@@ -17,8 +17,8 @@ export async function fetchLatestNews() {
     try {
       const feed = await parser.parseURL(source.url);
 
-      // Prendre les 5 articles les plus récents de chaque source
-      const recentItems = feed.items.slice(0, 5).map(item => {
+      // Prendre les 3 articles les plus récents de chaque source
+      const recentItems = feed.items.slice(0, 3).map(item => {
         // Essayer de récupérer la vraie catégorie de l'article
         let articleCategory = 'absent';
 

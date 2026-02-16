@@ -43,15 +43,16 @@ CONTRAINTES :
 - Ton : Optimiste, accessible, conversationnel
 - Structure : Intro accrocheuse → Discussion → Takeaway positif
 
-RÈGLE AUDIO CRITIQUE (ce script sera lu par un TTS) :
-- INTERDICTION ABSOLUE d'utiliser des apostrophes d'élision : pas de l', d', n', s', t', j', m', c', qu'
-- Reformule TOUJOURS pour éviter toute élision. Exemples :
+RÈGLE AUDIO (ce script sera lu par un TTS, minimise les apostrophes) :
+- REFORMULE quand une alternative naturelle existe :
   "c'est génial" → "oh, voilà qui est génial"
   "l'idée" → "cette idée"
   "d'ailleurs" → "par ailleurs"
   "qu'on" → "que nous" ou "que les gens"
   "n'est-ce pas" → "tu ne penses pas ?"
-- Chaque réplique doit pouvoir être lue à voix haute sans aucune apostrophe
+- GARDE l'apostrophe quand la supprimer casserait le français :
+  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
+- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
 
 STYLE À ADOPTER :
  "Oh wow, voilà qui est génial !" (réactions spontanées)

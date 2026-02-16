@@ -34,16 +34,17 @@ CONTRAINTES :
 - Ton journalistique professionnel : précis, sobre, élégant
 - Pas de sensationnalisme
 
-RÈGLE AUDIO CRITIQUE (cet article sera lu par un TTS) :
-- INTERDICTION d'utiliser des apostrophes d'élision : pas de l', d', n', s', t', j', m', c', qu'
-- Reformule TOUJOURS pour éviter l'élision. Exemples :
-  "l'écologie" → "la écologie" est INTERDIT, reformule en "le domaine écologique" ou "cette discipline"
-  "l'élément" → reformule en "cet élément" ou "un élément"
-  "d'énergie" → reformule en "en énergie" ou "de cette énergie"
-  "n'est pas" → reformule en "ne se trouve pas" ou restructure la phrase
-  "c'est" → reformule en "cela représente" ou "voici"
-  "qu'il" → reformule en "que ce dernier" ou restructure
-- Chaque phrase doit pouvoir être lue à voix haute sans aucune apostrophe
+RÈGLE AUDIO (cet article sera lu par un TTS, minimise les apostrophes) :
+- REFORMULE quand une alternative naturelle existe :
+  "c'est" → "cela représente", "voici", "il s'agit de"
+  "l'écologie" → "le domaine écologique", "cette discipline"
+  "l'innovation" → "cette innovation"
+  "d'énergie" → "en énergie", "de cette énergie"
+  "n'est pas" → "ne se révèle pas", restructure la phrase
+  "qu'il" → "que ce dernier", restructure la phrase
+- GARDE l'apostrophe quand la supprimer casserait le français :
+  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
+- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
 
 INTERDICTIONS :
 - Les sous-titres dans le corps de l'article
@@ -86,15 +87,17 @@ Section 3 (SANS titre) - L'impact
 CHUTE (1-2 phrases courtes)
 Une phrase finale qui résonne. Factuelle, pas moralisante. Un constat sobre.
 
-RÈGLE AUDIO CRITIQUE (cet article sera lu par un TTS) :
-- INTERDICTION d'utiliser des apostrophes d'élision : pas de l', d', n', s', t', j', m', c', qu'
-- Reformule TOUJOURS pour éviter l'élision. Exemples :
-  "l'écologie" → reformule en "le domaine écologique" ou "cette discipline"
-  "l'élément" → reformule en "cet élément" ou "un élément"
-  "d'énergie" → reformule en "en énergie" ou "de cette énergie"
-  "n'est pas" → reformule en "ne se trouve pas" ou restructure la phrase
-  "c'est" → reformule en "cela représente" ou "voici"
-- Chaque phrase doit pouvoir être lue à voix haute sans aucune apostrophe
+RÈGLE AUDIO (cet article sera lu par un TTS, minimise les apostrophes) :
+- REFORMULE quand une alternative naturelle existe :
+  "c'est" → "cela représente", "voici", "il s'agit de"
+  "l'écologie" → "le domaine écologique", "cette discipline"
+  "l'innovation" → "cette innovation"
+  "d'énergie" → "en énergie", "de cette énergie"
+  "n'est pas" → "ne se révèle pas", restructure la phrase
+  "qu'il" → "que ce dernier", restructure la phrase
+- GARDE l'apostrophe quand la supprimer casserait le français :
+  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
+- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
 
 CONTRAINTES ABSOLUES :
 - Titre sur la première ligne avec le préfixe [TITRE]
@@ -138,15 +141,17 @@ Réponse : 3-4 lignes. Chiffres, impact mesurable, changement réel.
 Question 5 (perspective : Et maintenant ?)
 Réponse : 2-3 lignes. Projection sobre et réaliste.
 
-RÈGLE AUDIO CRITIQUE (cet article sera lu par un TTS) :
-- INTERDICTION d'utiliser des apostrophes d'élision : pas de l', d', n', s', t', j', m', c', qu'
-- Reformule TOUJOURS pour éviter l'élision. Exemples :
-  "l'écologie" → reformule en "le domaine écologique" ou "cette discipline"
-  "l'élément" → reformule en "cet élément" ou "un élément"
-  "d'énergie" → reformule en "en énergie" ou "de cette énergie"
-  "n'est pas" → reformule en "ne se trouve pas" ou restructure la phrase
-  "c'est" → reformule en "cela représente" ou "voici"
-- Chaque phrase doit pouvoir être lue à voix haute sans aucune apostrophe
+RÈGLE AUDIO (cet article sera lu par un TTS, minimise les apostrophes) :
+- REFORMULE quand une alternative naturelle existe :
+  "c'est" → "cela représente", "voici", "il s'agit de"
+  "l'écologie" → "le domaine écologique", "cette discipline"
+  "l'innovation" → "cette innovation"
+  "d'énergie" → "en énergie", "de cette énergie"
+  "n'est pas" → "ne se révèle pas", restructure la phrase
+  "qu'il" → "que ce dernier", restructure la phrase
+- GARDE l'apostrophe quand la supprimer casserait le français :
+  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
+- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
 
 CONTRAINTES ABSOLUES :
 - Titre sur la première ligne avec le préfixe [TITRE]

@@ -5,6 +5,7 @@ import { generateAudioForArticle } from '../src/services/audio-generator.js';
 import { generateImageForArticle } from '../src/services/image-generator.js';
 import { uploadAudioToSupabase, uploadImageToSupabase } from '../src/services/supabase-storage.js';
 import { scoreAllCategories } from './positivity-scorer.js';
+import { verifyCategoryWithClaude, logCategoryMismatch, logSelectedArticle } from './category-mapper.js';
 
 async function generateDailyArticles() {
   const tomorrow = new Date();
@@ -65,13 +66,45 @@ async function generateDailyArticles() {
     // 5. Scorer la positivité de tous les articles disponibles (par catégorie, en parallèle)
     const scoredByCategory = await scoreAllCategories(availableByCategory);
 
-    // 6. Sélectionner le meilleur article (plus positif) par catégorie
+    // 6. Sélectionner le meilleur article par catégorie avec vérification Claude
     const selectedArticles = {};
     for (const [category, articles] of Object.entries(scoredByCategory)) {
-      if (articles && articles.length > 0) {
-        selectedArticles[category] = articles[0]; // Premier = meilleur score
-        console.log(`${category}: Article sélectionné avec score ${articles[0].positivityScore}/100`);
+      if (!articles || articles.length === 0) continue;
+
+      let selectedArticle = null;
+
+      for (const candidate of articles) {
+        if (candidate.categoryMethod === 'keyword_match') {
+          // Vérifier avec Claude que la catégorie mots-clés est correcte
+          console.log(`${category}: Vérification Claude pour "${candidate.title.substring(0, 50)}..."`);
+          const verification = await verifyCategoryWithClaude(candidate, category);
+
+          if (verification.confirmed) {
+            selectedArticle = candidate;
+            break;
+          } else {
+            // Log le mismatch pour ajuster les mots-clés dans le futur
+            await logCategoryMismatch(candidate, category, verification.suggestedCategory);
+            continue; // Passer au candidat suivant
+          }
+        } else {
+          // Catégorisé par Claude directement → déjà fiable
+          selectedArticle = candidate;
+          break;
+        }
       }
+
+      if (selectedArticle) {
+        selectedArticles[category] = selectedArticle;
+        console.log(`${category}: Article sélectionné avec score ${selectedArticle.positivityScore}/100`);
+      } else {
+        console.log(`${category}: Aucun article validé après vérification Claude`);
+      }
+    }
+
+    // Logger les articles sélectionnés pour analyse des sources
+    for (const [category, article] of Object.entries(selectedArticles)) {
+      await logSelectedArticle(article, category);
     }
 
     console.log(`\nArticles sélectionnés: ${Object.keys(selectedArticles).length} catégories`);

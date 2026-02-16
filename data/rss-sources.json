@@ -1,49 +1,152 @@
 {
   "sources": [
     {
-      "name": "Positive News",
-      "url": "https://www.positive.news/feed/",
-      "language": "en"
+      "name": "Good News Network",
+      "url": "https://www.goodnewsnetwork.org/feed/"
     },
     {
-      "name": "Good News Network",
-      "url": "https://www.goodnewsnetwork.org/feed/",
-      "language": "en"
+      "name": "Positive News",
+      "url": "https://www.positive.news/feed/"
     },
     {
       "name": "The Optimist Daily",
-      "url": "https://www.optimistdaily.com/feed/",
-      "language": "en"
+      "url": "https://optimistdaily.com/feed/"
     },
     {
-      "name": "Happy Eco News",
-      "url": "https://happyeconews.com/feed/",
-      "language": "en"
+      "name": "Good Good Good",
+      "url": "https://goodgoodgood.co/articles/rss.xml"
     },
     {
-      "name": "Reasons to be Cheerful",
-      "url": "https://reasonstobecheerful.world/feed/",
-      "language": "en"
+      "name": "Grist",
+      "url": "https://grist.org/feed/"
     },
     {
-      "name": "BBC News Health",
-      "url": "http://feeds.bbci.co.uk/news/health/rss.xml",
-      "language": "en"
+      "name": "Earth911",
+      "url": "https://earth911.com/feed/"
+    },
+    {
+      "name": "Eco Friend",
+      "url": "https://ecofriend.org/feed/"
+    },
+    {
+      "name": "The Guardian - Environment",
+      "url": "https://www.theguardian.com/uk/environment/rss"
+    },
+    {
+      "name": "Conservation International",
+      "url": "http://feeds.feedburner.com/ConservationInternationalBlog"
+    },
+    {
+      "name": "UNEP",
+      "url": "https://www.unep.org/rss.xml"
+    },
+    {
+      "name": "ScienceDaily",
+      "url": "https://www.sciencedaily.com/rss/all.xml"
+    },
+    {
+      "name": "BBC Science & Environment",
+      "url": "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"
+    },
+    {
+      "name": "BBC Technology",
+      "url": "http://feeds.bbci.co.uk/news/technology/rss.xml"
+    },
+    {
+      "name": "The Guardian - Technology",
+      "url": "https://www.theguardian.com/uk/technology/rss"
+    },
+    {
+      "name": "The Guardian - Science",
+      "url": "https://www.theguardian.com/science/rss"
+    },
+    {
+      "name": "NASA Breaking News",
+      "url": "https://www.nasa.gov/rss/dyn/breaking_news.rss"
+    },
+    {
+      "name": "Phys.org",
+      "url": "https://phys.org/rss-feed/"
+    },
+    {
+      "name": "Live Science",
+      "url": "https://livescience.com/feeds.xml"
+    },
+    {
+      "name": "UN Press",
+      "url": "https://press.un.org/en/rss.xml"
+    },
+    {
+      "name": "UN News",
+      "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml"
+    },
+    {
+      "name": "BBC Health",
+      "url": "http://feeds.bbci.co.uk/news/health/rss.xml"
     },
     {
       "name": "ScienceDaily Health",
-      "url": "https://www.sciencedaily.com/rss/top/health.xml",
-      "language": "en"
+      "url": "https://www.sciencedaily.com/rss/top/health.xml"
     },
     {
-      "name": "ScienceDaily All",
-      "url": "https://www.sciencedaily.com/rss/all.xml",
-      "language": "en"
+      "name": "The Guardian - Culture",
+      "url": "https://www.theguardian.com/uk/culture/rss"
+    },
+    {
+      "name": "BBC Arts & Entertainment",
+      "url": "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml"
+    },
+    {
+      "name": "Global Positive News",
+      "url": "https://www.globalpositivenewsnetwork.com/feed"
+    },
+    {
+      "name": "Upworthy",
+      "url": "https://www.upworthy.com/rss"
+    },
+    {
+      "name": "DailyGood",
+      "url": "https://www.dailygood.org/feed"
+    },
+    {
+      "name": "Good Black News",
+      "url": "https://goodblacknews.org/feed/"
     },
     {
       "name": "The Better India",
-      "url": "https://www.thebetterindia.com/feed/",
-      "language": "en"
+      "url": "https://www.thebetterindia.com/feed/"
+    },
+    {
+      "name": "Positivr",
+      "url": "https://positivr.fr/feed"
+    },
+    {
+      "name": "Le Média Positif",
+      "url": "https://lemediapositif.com/feed"
+    },
+    {
+      "name": "18h39",
+      "url": "https://www.18h39.fr/feed"
+    },
+    {
+      "name": "Reporterre",
+      "url": "https://reporterre.net/spip.php?page=backend"
+    },
+    {
+      "name": "Socialter",
+      "url": "https://www.socialter.fr/rss"
+    },
+    {
+      "name": "Novethic",
+      "url": "https://www.novethic.fr/feed"
+    },
+    {
+      "name": "France Info Sciences",
+      "url": "https://www.francetvinfo.fr/sciences.rss"
+    },
+    {
+      "name": "France Info Santé",
+      "url": "https://www.francetvinfo.fr/sante.rss"
     }
   ]
 }

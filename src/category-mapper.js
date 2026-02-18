@@ -42,6 +42,7 @@ export async function logCategoryMismatch(article, keywordCategory, claudeCatego
     claudeCategory: claudeCategory
   };
 
+  console.log(`  [Mismatch] "${article.title.substring(0, 50)}..." mots-clés="${keywordCategory}" vs Claude="${claudeCategory}"`);
   await appendFile(logFile, JSON.stringify(logEntry) + '\n');
 }
 
@@ -97,6 +98,7 @@ function matchKeywords(article) {
   const [bestCategory, bestScore] = sortedCategories[0];
   const confidence = bestScore >= 3 ? 'high' : 'medium';
 
+  console.log(`  [Mots-clés] "${article.title.substring(0, 50)}..." -> ${bestCategory} (${bestScore} mots-clés)`);
   return {
     category: bestCategory,
     method: 'keyword_match',
@@ -138,9 +140,11 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown) :
     const response = JSON.parse(cleanJsonResponse(message.content[0].text));
 
     if (!VALID_CATEGORIES.includes(response.category)) {
+      console.log(`  [Claude] "${article.title.substring(0, 50)}..." -> catégorie invalide: "${response.category}"`);
       return { category: 'uncategorized', method: 'claude_categorization', confidence: 'low' };
     }
 
+    console.log(`  [Claude] "${article.title.substring(0, 50)}..." -> ${response.category}`);
     return {
       category: response.category,
       method: 'claude_categorization',
@@ -183,6 +187,7 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown) :
 
     const response = JSON.parse(cleanJsonResponse(message.content[0].text));
 
+    console.log(`  [Vérification] "${article.title.substring(0, 50)}..." -> ${response.confirmed ? 'CONFIRMÉ' : 'CORRIGÉ: ' + response.suggestedCategory} (${response.raison})`);
     return {
       confirmed: response.confirmed,
       suggestedCategory: response.suggestedCategory || keywordCategory,

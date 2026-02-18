@@ -194,18 +194,9 @@ export async function generatePodcastAudio(article) {
  * @returns {Promise<{filepath: string, format: string, cost: number}>}
  */
 export async function generateAudioForArticle(article) {
-  // Choisir aléatoirement le format
-  const formats = ['simple', 'podcast'];
-  const format = formats[Math.floor(Math.random() * formats.length)];
+  const format = 'simple';
 
-  console.log(`\n🎲 Format choisi: ${format.toUpperCase()}`);
-
-  let result;
-  if (format === 'simple') {
-    result = await generateSimpleAudio(article);
-  } else {
-    result = await generatePodcastAudio(article);
-  }
+  let result = await generateSimpleAudio(article);
 
   // Sauvegarder temporairement le fichier
   const tempDir = './temp';

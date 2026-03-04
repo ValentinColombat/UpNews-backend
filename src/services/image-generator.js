@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { googleImagenClient } from './google-imagen-client.js';
 import fs from 'fs';
 import path from 'path';
+import { MODELS } from '../config/models.js';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -40,7 +41,7 @@ RÉPONDS UNIQUEMENT AVEC LE PROMPT, RIEN D'AUTRE.`;
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: MODELS.imagePrompt,
       max_tokens: 100,
       messages: [{ role: 'user', content: prompt }],
     });

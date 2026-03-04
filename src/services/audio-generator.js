@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { googleTTSClient } from './google-tts-client.js';
 import fs from 'fs';
 import path from 'path';
+import { MODELS } from '../config/models.js';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -74,7 +75,7 @@ Important : La conversation doit sembler spontanée, pas scripté. Commence dire
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: MODELS.articleGeneration,
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     });

@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
+import { MODELS } from './config/models.js';
 
 dotenv.config();
 
@@ -183,7 +184,7 @@ IMPORTANT:
     const startTime = Date.now();
     
     const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: MODELS.categorization,
       max_tokens: 5000,
       temperature: 0.2,
       messages: [{ role: 'user', content: prompt }]
@@ -282,7 +283,7 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown) :
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: MODELS.categorization,
       max_tokens: 150,
       temperature: 0.2,
       messages: [{ role: 'user', content: prompt }]

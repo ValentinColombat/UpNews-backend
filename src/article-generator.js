@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { prompts } from './prompts.js';
 import dotenv from 'dotenv';
+import { MODELS } from './config/models.js';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ export async function generateArticle(newsItem, promptType = 'classic') {
   
   // Appel à Claude API
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: MODELS.articleGeneration,
     max_tokens: 1500,
     messages: [{
       role: 'user',

@@ -63,32 +63,53 @@ async function generateDailyArticles() {
       }
     }
 
+    // Pause de 1 minute avant le scoring pour éviter le rate limit
+    console.log('\n⏳ Pause de 60 secondes avant le scoring (rate limit)...');
+    await new Promise(resolve => setTimeout(resolve, 60000));
+    console.log('✅ Reprise du traitement\n');
+
     // 5. Scorer la positivité de tous les articles disponibles (par catégorie, en parallèle)
     const scoredByCategory = await scoreAllCategories(availableByCategory);
 
     // 6. Sélectionner le meilleur article par catégorie avec vérification Claude
+    console.log('\n' + '='.repeat(60));
+    console.log('🔍 SÉLECTION DES ARTICLES PAR CATÉGORIE');
+    console.log('='.repeat(60));
+    
     const selectedArticles = {};
     for (const [category, articles] of Object.entries(scoredByCategory)) {
       if (!articles || articles.length === 0) continue;
 
+      console.log(`\n📂 ${category.toUpperCase()} (${articles.length} candidats)`);
+      
       let selectedArticle = null;
+      let candidateNum = 0;
 
       for (const candidate of articles) {
+        candidateNum++;
+        
         if (candidate.categoryMethod === 'keyword_match') {
           // Vérifier avec Claude que la catégorie mots-clés est correcte
-          console.log(`${category}: Vérification Claude pour "${candidate.title.substring(0, 50)}..."`);
+          console.log(`   #${candidateNum} [${candidate.positivityScore}/100] "${candidate.title.substring(0, 45)}..."`);
+          console.log(`      → Catégorisé par mots-clés, vérification Claude...`);
+          
           const verification = await verifyCategoryWithClaude(candidate, category);
 
           if (verification.confirmed) {
+            console.log(`      ✅ CONFIRMÉ - Article sélectionné !`);
             selectedArticle = candidate;
             break;
           } else {
-            // Log le mismatch pour ajuster les mots-clés dans le futur
+            console.log(`      ❌ MISMATCH - Claude suggère: ${verification.suggestedCategory}`);
+            console.log(`      ⏭️  Passage au candidat suivant...`);
             await logCategoryMismatch(candidate, category, verification.suggestedCategory);
-            continue; // Passer au candidat suivant
+            continue;
           }
         } else {
           // Catégorisé par Claude directement → déjà fiable
+          console.log(`   #${candidateNum} [${candidate.positivityScore}/100] "${candidate.title.substring(0, 45)}..."`);
+          console.log(`      → Catégorisé par Claude batch`);
+          console.log(`      ✅ Article sélectionné !`);
           selectedArticle = candidate;
           break;
         }
@@ -96,11 +117,11 @@ async function generateDailyArticles() {
 
       if (selectedArticle) {
         selectedArticles[category] = selectedArticle;
-        console.log(`${category}: Article sélectionné avec score ${selectedArticle.positivityScore}/100`);
       } else {
-        console.log(`${category}: Aucun article validé après vérification Claude`);
+        console.log(`   ⚠️  Aucun article validé après ${candidateNum} candidats`);
       }
     }
+    console.log('\n' + '='.repeat(60));
 
     // Logger les articles sélectionnés pour analyse des sources
     for (const [category, article] of Object.entries(selectedArticles)) {

@@ -3,6 +3,7 @@ import { appendFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import dotenv from 'dotenv';
+import { MODELS } from './config/models.js';
 
 dotenv.config();
 
@@ -88,25 +89,35 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown, pas de \`\`\`json) :
 
   try {
     // Appel à Claude API
+    const startTime = Date.now();
+    console.log(`   📤 Envoi requête Claude...`);
+    
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022', // Le moins cher pour du scoring simple
-      max_tokens: 1500,
-      temperature: 0.3, // Faible température pour plus de cohérence
+      model: MODELS.positivityScoring,
+      max_tokens: 2000,
+      temperature: 0.3,
       messages: [{
         role: 'user',
         content: prompt
       }]
     });
 
-    const responseText = message.content[0].text.trim();
+    const duration = Date.now() - startTime;
+    console.log(`   📥 Réponse reçue en ${duration}ms`);
+    console.log(`   💰 Tokens: ${message.usage?.input_tokens || 'N/A'} in / ${message.usage?.output_tokens || 'N/A'} out`);
+
+    // Nettoyer la réponse (supprime les backticks markdown si présents)
+    const rawText = message.content[0].text.trim();
+    const responseText = rawText.replace(/```(?:json)?\s*/g, '').replace(/```\s*/g, '').trim();
     
     // Parser le JSON
     let scores;
     try {
       scores = JSON.parse(responseText);
+      console.log(`   ✅ JSON parsé avec succès (${scores.length} scores)`);
     } catch (parseError) {
-      console.error('Erreur parsing JSON:', parseError);
-      console.error('Réponse brute:', responseText);
+      console.error('   ❌ Erreur parsing JSON:', parseError.message);
+      console.error('   Réponse brute (200 premiers chars):', responseText.substring(0, 200));
       throw new Error('Réponse Claude invalide');
     }
 
@@ -128,6 +139,12 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown, pas de \`\`\`json) :
 
     // Trier par score décroissant
     scoredArticles.sort((a, b) => b.positivityScore - a.positivityScore);
+
+    // Stats de distribution des scores
+    const highScore = scoredArticles.filter(a => a.positivityScore >= 70).length;
+    const mediumScore = scoredArticles.filter(a => a.positivityScore >= 50 && a.positivityScore < 70).length;
+    const lowScore = scoredArticles.filter(a => a.positivityScore < 50).length;
+    console.log(`   📊 Distribution: ${highScore} positifs (70+) | ${mediumScore} moyens (50-69) | ${lowScore} faibles (<50)`);
 
     // Logger les résultats
     await logPositivityScores(category, scoredArticles);
@@ -163,8 +180,20 @@ export async function scoreAllCategories(groupedArticles) {
   console.log('🎯 SCORING DE POSITIVITÉ - TOUTES CATÉGORIES');
   console.log('='.repeat(60));
 
+  const startTime = Date.now();
   const scoringPromises = [];
   const categories = Object.keys(groupedArticles);
+
+  // Compter le total d'articles
+  let totalArticles = 0;
+  for (const category of categories) {
+    const articles = groupedArticles[category];
+    if (articles && articles.length > 0) {
+      totalArticles += articles.length;
+    }
+  }
+  console.log(`📝 Total articles à scorer: ${totalArticles} (${categories.length} catégories)`);
+  console.log(`📡 Requêtes API: ${categories.length} (en parallèle)\n`);
 
   // Lancer le scoring en parallèle pour toutes les catégories
   for (const category of categories) {
@@ -186,7 +215,23 @@ export async function scoreAllCategories(groupedArticles) {
     scoredGroupedArticles[category] = scored;
   });
 
-  console.log(`\n✅ Scoring terminé pour ${results.length} catégories`);
+  const duration = Date.now() - startTime;
+
+  // Résumé final
+  console.log(`\n${'='.repeat(60)}`);
+  console.log('📊 RÉSUMÉ SCORING POSITIVITÉ');
+  console.log('='.repeat(60));
+  console.log(`   ⏱️  Temps total: ${duration}ms (${(duration/1000).toFixed(1)}s)`);
+  console.log(`   📡 Requêtes API: ${results.length}`);
+  
+  // Meilleur article par catégorie
+  console.log(`\n   🏆 Meilleur article par catégorie:`);
+  for (const { category, scored } of results) {
+    if (scored.length > 0) {
+      const best = scored[0];
+      console.log(`      ${category}: [${best.positivityScore}/100] ${best.title.substring(0, 45)}...`);
+    }
+  }
   console.log('='.repeat(60));
 
   return scoredGroupedArticles;

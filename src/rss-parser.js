@@ -1,6 +1,6 @@
 import Parser from 'rss-parser';
 import { readFile } from 'fs/promises';
-import { categorizeArticle, groupArticlesByCategory } from './category-mapper.js';
+import { categorizeArticle, groupArticlesByCategory, categorizeWithClaudeBatch } from './category-mapper.js';
 
 const parser = new Parser();
 
@@ -40,32 +40,74 @@ export async function fetchLatestNews() {
 
 // Catégoriser tous les articles et les grouper par thème
 export async function categorizeAndGroupNews(newsList) {
-  console.log('\nCatégorisation des articles...');
+  console.log('\n' + '='.repeat(60));
+  console.log('📂 CATÉGORISATION DES ARTICLES');
+  console.log('='.repeat(60));
+  console.log(`   Total articles à traiter: ${newsList.length}`);
 
-  // Catégoriser chaque article avec le mapping statique
-  let claudeCount = 0;
-  let keywordCount = 0;
+  const startTime = Date.now();
+
+  // ÉTAPE 1: Catégoriser par mots-clés (gratuit et rapide)
+  console.log('\n🔤 ÉTAPE 1: Catégorisation par mots-clés...');
+  
+  const categorizedByKeywords = [];
+  const needsClaudeCategorization = [];
+
   for (const article of newsList) {
     const result = await categorizeArticle(article);
-    article.appCategory = result.category;
-    article.categoryConfidence = result.confidence;
-    article.categoryMethod = result.method;
-    if (result.method === 'claude_categorization') claudeCount++;
-    else if (result.method === 'keyword_match') keywordCount++;
+    
+    if (result.method === 'keyword_match') {
+      // Mots-clés ont trouvé → pas besoin de Claude
+      article.appCategory = result.category;
+      article.categoryConfidence = result.confidence;
+      article.categoryMethod = result.method;
+      categorizedByKeywords.push(article);
+    } else {
+      // Pas de match → à envoyer à Claude
+      needsClaudeCategorization.push(article);
+    }
   }
 
-  console.log(`Catégorisation terminée: ${keywordCount} par mots-clés, ${claudeCount} par Claude (sur ${newsList.length} articles)`);
+  console.log(`   ✅ Catégorisés par mots-clés: ${categorizedByKeywords.length}`);
+  console.log(`   ⏳ À envoyer à Claude: ${needsClaudeCategorization.length}`);
+
+  // ÉTAPE 2: Catégoriser les articles restants avec Claude en BATCH (1 seule requête)
+  let claudeBatchCount = 0;
+  let claudeErrorCount = 0;
+
+  if (needsClaudeCategorization.length > 0) {
+    console.log('\n🤖 ÉTAPE 2: Catégorisation batch Claude...');
+    
+    await categorizeWithClaudeBatch(needsClaudeCategorization);
+    
+    // Compter les résultats
+    needsClaudeCategorization.forEach(article => {
+      if (article.categoryMethod === 'claude_batch') {
+        claudeBatchCount++;
+      } else if (article.categoryMethod?.includes('error') || article.categoryMethod?.includes('invalid') || article.categoryMethod?.includes('missing')) {
+        claudeErrorCount++;
+      }
+    });
+  } else {
+    console.log('\n🤖 ÉTAPE 2: Aucun article à envoyer à Claude (tous catégorisés par mots-clés) ✨');
+  }
+
+  const duration = Date.now() - startTime;
 
   // Grouper par catégorie
   const grouped = groupArticlesByCategory(newsList);
 
-  // Afficher les stats
-  console.log('\nRépartition par catégorie:');
+  // DÉBRIEF FINAL - Répartition uniquement
+  console.log('\n' + '='.repeat(60));
+  console.log('� RÉPARTITION FINALE PAR CATÉGORIE');
+  console.log('='.repeat(60));
   for (const [category, articles] of Object.entries(grouped)) {
     if (articles.length > 0) {
-      console.log(`  ${category}: ${articles.length} articles`);
+      const percentage = ((articles.length/newsList.length)*100).toFixed(1);
+      console.log(`      ${category}: ${articles.length} articles (${percentage}%)`);
     }
   }
+  console.log('='.repeat(60) + '\n');
 
   return grouped;
 }

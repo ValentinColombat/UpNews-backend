@@ -112,47 +112,150 @@ function cleanJsonResponse(text) {
   return text.replace(/```(?:json)?\s*/g, '').replace(/```\s*/g, '').trim();
 }
 
-// Catégoriser un article avec Claude Haiku (fallback quand les mots-clés échouent)
-async function categorizeWithClaude(article) {
+// Catégoriser plusieurs articles en BATCH avec Claude Haiku (1 seule requête)
+// Si trop d'articles, divise en plusieurs batches de MAX_BATCH_SIZE
+const MAX_BATCH_SIZE = 25; // Max 25 articles par batch pour éviter les erreurs JSON
+
+export async function categorizeWithClaudeBatch(articles) {
+  if (!articles || articles.length === 0) {
+    return [];
+  }
+
+  console.log(`\n🤖 CATÉGORISATION BATCH CLAUDE`);
+  console.log(`   Articles à catégoriser: ${articles.length}`);
+
+  // Si trop d'articles, diviser en plusieurs batches
+  if (articles.length > MAX_BATCH_SIZE) {
+    console.log(`   📦 Division en batches de ${MAX_BATCH_SIZE} articles max...`);
+    
+    const batches = [];
+    for (let i = 0; i < articles.length; i += MAX_BATCH_SIZE) {
+      batches.push(articles.slice(i, i + MAX_BATCH_SIZE));
+    }
+    
+    console.log(`   📦 Nombre de batches: ${batches.length}`);
+    
+    // Traiter chaque batch séquentiellement (pour éviter rate limit)
+    for (let i = 0; i < batches.length; i++) {
+      console.log(`\n   🔄 Traitement batch ${i + 1}/${batches.length} (${batches[i].length} articles)...`);
+      await processSingleBatch(batches[i], i + 1, batches.length);
+    }
+    
+    return articles;
+  }
+
+  // Si moins de MAX_BATCH_SIZE articles, traiter en un seul batch
+  await processSingleBatch(articles, 1, 1);
+  return articles;
+}
+
+// Traiter un seul batch d'articles
+async function processSingleBatch(articles, batchNum, totalBatches) {
+  // Construire la liste des articles pour le prompt
+  let articlesList = '';
+  articles.forEach((article, index) => {
+    articlesList += `
+Article ${index + 1}:
+Titre: ${article.title}
+Description: ${(article.description || 'Aucune description').substring(0, 150)}
+`;
+  });
+
   const prompt = `Tu es un expert en catégorisation d'articles d'actualité positive.
 
-Catégorise cet article dans UNE SEULE des catégories suivantes :
+Catégorise ces ${articles.length} articles dans UNE SEULE des catégories suivantes :
 - ecologie (environnement, climat, biodiversité, énergie renouvelable)
 - santé (médecine, bien-être, recherche médicale, santé publique)
 - sciences-et-tech (technologie, innovation, IA, espace, découvertes scientifiques)
 - social-et-culture (société, éducation, art, musique, solidarité, justice sociale)
 
-Article :
-Titre: ${article.title}
-Description: ${article.description || 'Aucune description'}
+${articlesList}
 
-RÉPONDS UNIQUEMENT en JSON valide (pas de markdown) :
-{"category": "...", "raison": "..."}`;
+RÉPONDS UNIQUEMENT en JSON valide (un tableau, PAS de markdown, PAS de texte avant/après) :
+[{"index":1,"category":"ecologie","raison":"courte"},{"index":2,"category":"santé","raison":"courte"}]
+
+IMPORTANT: 
+- Retourne EXACTEMENT ${articles.length} éléments
+- Raisons TRÈS courtes (max 5 mots)
+- JSON compact sur une seule ligne si possible`;
 
   try {
+    const startTime = Date.now();
+    
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 150,
+      max_tokens: 5000,
       temperature: 0.2,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const response = JSON.parse(cleanJsonResponse(message.content[0].text));
-
-    if (!VALID_CATEGORIES.includes(response.category)) {
-      console.log(`  [Claude] "${article.title.substring(0, 50)}..." -> catégorie invalide: "${response.category}"`);
-      return { category: 'uncategorized', method: 'claude_categorization', confidence: 'low' };
+    const duration = Date.now() - startTime;
+    const responseText = cleanJsonResponse(message.content[0].text);
+    
+    let results;
+    try {
+      results = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error(`   ❌ Erreur parsing JSON batch ${batchNum}: ${parseError.message}`);
+      console.error(`   Réponse (200 premiers chars): ${responseText.substring(0, 200)}...`);
+      
+      // Fallback: marquer tous comme uncategorized
+      articles.forEach(article => {
+        article.appCategory = 'uncategorized';
+        article.categoryConfidence = 'low';
+        article.categoryMethod = 'claude_batch_error';
+      });
+      return;
     }
 
-    console.log(`  [Claude] "${article.title.substring(0, 50)}..." -> ${response.category}`);
-    return {
-      category: response.category,
-      method: 'claude_categorization',
-      confidence: 'high'
-    };
+    // Mapper les résultats aux articles
+    let successCount = 0;
+    let invalidCount = 0;
+    
+    for (const result of results) {
+      const articleIndex = result.index - 1;
+      if (articleIndex >= 0 && articleIndex < articles.length) {
+        const article = articles[articleIndex];
+        
+        if (VALID_CATEGORIES.includes(result.category)) {
+          article.appCategory = result.category;
+          article.categoryConfidence = 'high';
+          article.categoryMethod = 'claude_batch';
+          article.categoryReason = result.raison;
+          successCount++;
+        } else {
+          article.appCategory = 'uncategorized';
+          article.categoryConfidence = 'low';
+          article.categoryMethod = 'claude_batch_invalid';
+          invalidCount++;
+        }
+      }
+    }
+
+    // Gérer les articles qui n'ont pas reçu de réponse
+    const missingCount = articles.filter(a => !a.appCategory).length;
+    articles.forEach(article => {
+      if (!article.appCategory) {
+        article.appCategory = 'uncategorized';
+        article.categoryConfidence = 'low';
+        article.categoryMethod = 'claude_batch_missing';
+      }
+    });
+
+    // Logs de débrief pour ce batch
+    console.log(`   ✅ Batch ${batchNum}/${totalBatches}: ${successCount}/${articles.length} catégorisés (${duration}ms)`);
+    if (invalidCount > 0) console.log(`   ⚠️  Catégories invalides: ${invalidCount}`);
+    if (missingCount > 0) console.log(`   ❌ Réponses manquantes: ${missingCount}`);
+
   } catch (error) {
-    console.error(`Erreur Claude categorization: ${error.message}`);
-    return { category: 'uncategorized', method: 'claude_categorization_error', confidence: 'low' };
+    console.error(`   ❌ ERREUR BATCH ${batchNum}: ${error.message}`);
+    
+    // Fallback: marquer tous comme uncategorized
+    articles.forEach(article => {
+      article.appCategory = 'uncategorized';
+      article.categoryConfidence = 'low';
+      article.categoryMethod = 'claude_batch_error';
+    });
   }
 }
 
@@ -200,22 +303,26 @@ RÉPONDS UNIQUEMENT en JSON valide (pas de markdown) :
   }
 }
 
-// Fonction principale de catégorisation
+// Fonction principale de catégorisation (uniquement mots-clés, Claude géré en batch)
 export async function categorizeArticle(article) {
   await loadMappingConfig();
 
-  // 1. Essayer les mots-clés (analyse du contenu)
-  let result = matchKeywords(article);
+  // Essayer les mots-clés (analyse du contenu)
+  const result = matchKeywords(article);
 
-  // 2. Si pas de match, catégoriser avec Claude Haiku
-  if (!result) {
-    result = await categorizeWithClaude(article);
+  if (result) {
+    return {
+      category: result.category,
+      confidence: result.confidence,
+      method: result.method
+    };
   }
 
+  // Si pas de match, retourner null (sera catégorisé par Claude en batch)
   return {
-    category: result.category,
-    confidence: result.confidence,
-    method: result.method
+    category: null,
+    confidence: null,
+    method: 'needs_claude'
   };
 }
 

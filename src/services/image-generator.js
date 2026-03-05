@@ -98,8 +98,8 @@ export async function generateImageForArticle(article) {
       console.error(`Tentative ${attempt}/${maxRetries} échouée pour article ${article.id}: ${error.message}`);
 
       if (attempt < maxRetries) {
-        const delay = attempt * 5000;
-        console.log(`Nouvelle tentative dans ${delay / 1000}s...`);
+        const delay = 30000 + (attempt * 15000); // 30s, 45s, 60s
+        console.log(`⏳ Nouvelle tentative dans ${delay / 1000}s (quota rate limit)...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       } else {
         console.error(`Échec définitif après ${maxRetries} tentatives pour article ${article.id}`);

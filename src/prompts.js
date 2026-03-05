@@ -127,19 +127,36 @@ FORMAT DE RÉPONSE OBLIGATOIRE :
 
 [CONTENU]
 Question 1 (contextualise : Qui/Quoi/Où ?)
+
 Réponse : 2-3 lignes. Pose le décor factuel.
 
 Question 2 (approfondit : Quel était le problème ?)
+
 Réponse : 3-4 lignes. Détaille la situation avant la bonne nouvelle.
 
 Question 3 (solution : Comment ça marche/Qui a fait quoi ?)
+
 Réponse : 3-4 lignes. Le fait positif, l'acteur, la méthode.
 
 Question 4 (impact : Quel résultat concret ?)
+
 Réponse : 3-4 lignes. Chiffres, impact mesurable, changement réel.
 
 Question 5 (perspective : Et maintenant ?)
+
 Réponse : 2-3 lignes. Projection sobre et réaliste.
+
+MISE EN PAGE OBLIGATOIRE :
+- Chaque question doit être suivie d'une LIGNE VIDE avant la réponse
+- Chaque bloc Q&A doit être séparé par une LIGNE VIDE
+- Format exact :
+  Question ?
+  
+  Réponse ici sur plusieurs lignes si nécessaire.
+  
+  Question suivante ?
+  
+  Réponse suivante.
 
 RÈGLE AUDIO (cet article sera lu par un TTS, minimise les apostrophes) :
 - REFORMULE quand une alternative naturelle existe :
@@ -163,7 +180,7 @@ CONTRAINTES ABSOLUES :
 - Réponses en texte normal
 - AUCUN astérisque ou symbole de mise en forme
 - Pas de morale finale, juste un constat factuel
-- Espaces entre chaque Q&A
+- LIGNE VIDE après chaque question et entre chaque bloc Q&A
 - Pas de mention de source à la fin
 
 TON : Conversationnel mais précis. Comme un ami qui t'explique quelque chose de cool.`

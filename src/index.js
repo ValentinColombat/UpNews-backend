@@ -7,9 +7,6 @@ import { uploadAudioToSupabase, uploadImageToSupabase } from '../src/services/su
 import { scoreAllCategories } from './positivity-scorer.js';
 import { verifyCategoryWithClaude, logCategoryMismatch, logSelectedArticle } from './category-mapper.js';
 
-
-// Comment merge 
-
 async function generateDailyArticles() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);

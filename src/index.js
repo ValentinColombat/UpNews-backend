@@ -229,16 +229,22 @@ async function generateDailyArticles() {
         );
 
         // Mettre à jour l'article avec l'URL audio
-        const { error: updateError } = await supabase
+        console.log(`   Mise à jour DB article ID: ${insertedArticle.id}`);
+        const { data: updateData, error: updateError } = await supabase
           .from('articles')
           .update({
             audio_url: audioUrl,
             audio_format: audioResult.format,
           })
-          .eq('id', insertedArticle.id);
+          .eq('id', insertedArticle.id)
+          .select();
 
         if (updateError) {
           throw new Error(`Erreur update audio URL: ${updateError.message}`);
+        }
+
+        if (!updateData || updateData.length === 0) {
+          throw new Error(`Update audio silencieux : aucune ligne modifiée pour l'article ID ${insertedArticle.id}`);
         }
 
         console.log(`Audio généré et uploadé avec succès`);
@@ -282,15 +288,20 @@ async function generateDailyArticles() {
         );
 
         // Mettre à jour l'article avec l'URL image
-        const { error: imageUpdateError } = await supabase
+        const { data: imageUpdateData, error: imageUpdateError } = await supabase
           .from('articles')
           .update({
             image_url: imageUrl,
           })
-          .eq('id', insertedArticle.id);
+          .eq('id', insertedArticle.id)
+          .select();
 
         if (imageUpdateError) {
           throw new Error(`Erreur update image URL: ${imageUpdateError.message}`);
+        }
+
+        if (!imageUpdateData || imageUpdateData.length === 0) {
+          throw new Error(`Update image silencieux : aucune ligne modifiée pour l'article ID ${insertedArticle.id}`);
         }
 
         console.log(`Image générée et uploadée avec succès`);

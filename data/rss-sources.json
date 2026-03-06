@@ -73,10 +73,6 @@
       "url": "https://livescience.com/feeds.xml"
     },
     {
-      "name": "UN News",
-      "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml"
-    },
-    {
       "name": "BBC Health",
       "url": "http://feeds.bbci.co.uk/news/health/rss.xml"
     },

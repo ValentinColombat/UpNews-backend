@@ -1,8 +1,8 @@
 import { fetchLatestNews, categorizeAndGroupNews } from './rss-parser.js';
 import { generateArticle } from './article-generator.js';
 import { supabase } from './supabase-client.js';
-import { generateAudioForArticle } from '../src/services/audio-generator.js';
-import { generateImageForArticle } from '../src/services/image-generator.js';
+import { generateAudioForArticle } from './services/audio-generator.js';
+import { generateImageForArticle } from './services/image-generator.js';
 import { uploadAudioToSupabase, uploadImageToSupabase } from '../src/services/supabase-storage.js';
 import { scoreAllCategories } from './positivity-scorer.js';
 import { verifyCategoryWithClaude, logCategoryMismatch, logSelectedArticle } from './category-mapper.js';
@@ -13,8 +13,6 @@ async function generateDailyArticles() {
   const targetDate = tomorrow.toISOString().split('T')[0];
 
   // Statistiques globales
-  let totalAudioCost = 0;
-  let totalCharactersGenerated = 0;
   let audioSuccessCount = 0;
   let audioFailureCount = 0;
 
@@ -219,10 +217,8 @@ async function generateDailyArticles() {
           content: content,
         });
 
-        console.log(` Statistiques audio:`);
         console.log(`   Format: ${audioResult.format}`);
-        console.log(`   Caractères: ${audioResult.characterCount}`);
-        console.log(`   Coût: $${audioResult.cost.toFixed(4)}`);
+        console.log(`   Fichier: ${audioResult.filepath}`);
 
         // Upload vers Supabase Storage
         const audioUrl = await uploadAudioToSupabase(
@@ -248,9 +244,6 @@ async function generateDailyArticles() {
         console.log(`Audio généré et uploadé avec succès`);
         console.log(`URL: ${audioUrl}`);
 
-        // Stats
-        totalAudioCost += audioResult.cost;
-        totalCharactersGenerated += audioResult.characterCount;
         audioSuccessCount++;
 
       } catch (audioError) {
@@ -342,10 +335,7 @@ async function generateDailyArticles() {
     console.log(`   Taux de succès: ${generatedCount > 0 ? ((imageSuccessCount / generatedCount) * 100).toFixed(1) : 0}%`);
 
     console.log(`COÛTS:`);
-    console.log(`   Caractères audio générés: ${totalCharactersGenerated.toLocaleString()}`);
-    console.log(`   Coût total audio: $${totalAudioCost.toFixed(4)}`);
     console.log(`   Coût total image: $${totalImageCost.toFixed(4)}`);
-    console.log(`   Coût total médias: $${(totalAudioCost + totalImageCost).toFixed(4)}`);
     
     console.log('\n' + '='.repeat(60) + '\n');
 

@@ -1,219 +1,125 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { googleTTSClient } from './google-tts-client.js';
-import fs from 'fs';
-import path from 'path';
-import { MODELS } from '../config/models.js';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// Nettoyer le texte pour une meilleure prononciation TTS
-function sanitizeTextForTTS(text) {
-  return text
-    // Normaliser toutes les variantes d'apostrophes vers l'apostrophe droite
-    .replace(/[\u2019\u2018\u02BC\u0060\u00B4]/g, "'")
-    // Normaliser les guillemets typographiques
-    .replace(/[\u201C\u201D\u00AB\u00BB]/g, '"')
-    // Supprimer les tirets longs isolés (pauses artificielles)
-    .replace(/\s[—–]\s/g, ', ')
-    // Supprimer le markdown résiduel
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/[*_#]/g, '')
-    // Nettoyer les espaces multiples
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 /**
- * Génère un script de podcast conversationnel avec Claude
- * @param {object} article - Article généré
- * @returns {Promise<Array>} - [{speaker: 'A', text: '...'}, ...]
+ * audio-generator.js
+ *
+ * Orchestrateur du pipeline de generation audio UpNews.
+ *
+ * Ce fichier est le SEUL point d'entree pour la generation audio.
+ * Il coordonne les trois etapes du pipeline dans l'ordre :
+ *
+ *   ETAPE 1 — Script dialogue  (dialog-script-generator.js)
+ *     Claude transforme l'article en dialogue Lea/Alex (texte pur, format strict)
+ *
+ *   ETAPE 2 — Synthese vocale  (gemini-tts-client.js)
+ *     Gemini TTS synthetise le dialogue en PCM brut via 1 seul appel API.
+ *     Les deux voix (Lea + Alex) sont generees simultanement — multi-speaker natif.
+ *     Avantage vs ancien Google TTS : N appels → 1 appel, plus rapide et plus fiable.
+ *
+ *   ETAPE 3 — Conversion audio  (audio-converter.js)
+ *     ffmpeg convertit le PCM brut en MP3 compresse (128kbps), lisible partout.
+ *
+ * Interface publique : generateAudioForArticle(article)
+ * Retourne : { filepath, format }
  */
-async function generatePodcastScript(article) {
-  const prompt = `Tu es un expert en création de podcasts conversationnels pour une app d'actualités positives.
 
-MISSION : Transformer cet article en script de podcast conversationnel de 2 minutes.
+import fs from 'node:fs';
+import path from 'node:path';
 
-ARTICLE :
-${article.content}
+import { generateDialogScriptFromArticle } from './dialog-script-generator.js';
+import {
+  generatePcmWithGeminiTts,
+  buildDialogTtsPrompt,
+  DEFAULT_SPEAKER_VOICE_CONFIGS,
+} from './gemini-tts-client.js';
+import { pcmToMp3 } from './audio-converter.js';
 
-CONTRAINTES :
-- Durée : ~1500 caractères de dialogue (= 2 minutes audio)
-- 2 animateurs : Alex (curieux, pose questions) et Sarah (experte, enthousiaste)
-- Ton : Optimiste, accessible, conversationnel
-- Structure : Intro accrocheuse → Discussion → Takeaway positif
-
-RÈGLE AUDIO (ce script sera lu par un TTS, minimise les apostrophes) :
-- REFORMULE quand une alternative naturelle existe :
-  "c'est génial" → "oh, voilà qui est génial"
-  "l'idée" → "cette idée"
-  "d'ailleurs" → "par ailleurs"
-  "qu'on" → "que nous" ou "que les gens"
-  "n'est-ce pas" → "tu ne penses pas ?"
-- GARDE l'apostrophe quand la supprimer casserait le français :
-  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
-- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
-
-STYLE À ADOPTER :
- "Oh wow, voilà qui est génial !" (réactions spontanées)
- "Attends, tu veux dire que..." (clarifications naturelles)
- "Exactement ! Par ailleurs..." (transitions fluides)
- Interruptions légères, questions rebond
- Pas de "Bonjour chers auditeurs" (trop formel)
- Pas de conclusion artificielle type "voilà pour cette fois"
- Pas de répétition des infos
-
-FORMAT DE SORTIE STRICT :
-[ALEX] Premier dialogue
-[SARAH] Réponse
-[ALEX] Rebond
-[SARAH] Suite
-etc.
-
-Important : La conversation doit sembler spontanée, pas scripté. Commence directement par le dialogue.`;
-
-  try {
-    const message = await anthropic.messages.create({
-      model: MODELS.articleGeneration,
-      max_tokens: 2000,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const scriptText = message.content[0].text;
-
-    // Parser le script
-    const segments = parseScript(scriptText);
-    
-    console.log(`📝 Script podcast généré: ${segments.length} répliques`);
-    return segments;
-  } catch (error) {
-    console.error('❌ Erreur génération script podcast:', error.message);
-    throw error;
-  }
-}
+// Dossier temporaire pour les fichiers PCM intermediaires et les MP3 finaux.
+// - Les fichiers .pcm sont supprimes apres conversion (inutiles apres ffmpeg).
+// - Les fichiers .mp3 sont conserves jusqu'a leur upload vers Supabase (dans index.js).
+const TEMP_DIR = './temp';
 
 /**
- * Parse un script au format [SPEAKER] text
- * @param {string} script - Script brut
- * @returns {Array} - [{speaker: 'A'|'B', text: '...'}, ...]
- */
-function parseScript(script) {
-  const lines = script.split('\n').filter(line => line.trim());
-  const segments = [];
-
-  for (const line of lines) {
-    const match = line.match(/\[(ALEX|SARAH)\]\s*(.+)/i);
-    if (match) {
-      const speaker = match[1].toUpperCase() === 'ALEX' ? 'A' : 'B';
-      const text = match[2].trim();
-      if (text) {
-        segments.push({ speaker, text });
-      }
-    }
-  }
-
-  return segments;
-}
-
-/**
- * Génère un audio au format simple (lecture directe)
- * @param {object} article - Article à lire
- * @returns {Promise<{audioBuffer: Buffer, characterCount: number}>}
- */
-export async function generateSimpleAudio(article) {
-  try {
-    console.log('\n🎙️ Génération audio SIMPLE');
-    
-    // Nettoyer le texte pour le TTS
-    let textToRead = sanitizeTextForTTS(article.content);
-
-    const characterCount = textToRead.length;
-    console.log(`Caractères à générer: ${characterCount}`);
-
-    // Choisir aléatoirement une voix
-    const voices = ['fr-FR-Chirp3-HD-Charon', 'fr-FR-Chirp3-HD-Leda'];
-    const randomVoice = voices[Math.floor(Math.random() * voices.length)];
-
-    const audioBuffer = await googleTTSClient.synthesizeSpeech(textToRead, {
-      voiceName: randomVoice,
-      speakingRate: 1.0,
-    });
-
-    const cost = googleTTSClient.calculateCost(characterCount);
-    console.log(` Coût estimé: $${cost.toFixed(4)}`);
-
-    return { audioBuffer, characterCount, cost };
-  } catch (error) {
-    console.error(' Erreur génération audio simple:', error.message);
-    throw error;
-  }
-}
-
-/**
- * Génère un audio au format podcast (conversation)
- * @param {object} article - Article à transformer
- * @returns {Promise<{audioBuffer: Buffer, characterCount: number}>}
- */
-export async function generatePodcastAudio(article) {
-  try {
-    console.log('\n🎙️ Génération audio PODCAST');
-
-    // 1. Générer le script conversationnel avec Claude
-    const segments = await generatePodcastScript(article);
-
-    if (segments.length === 0) {
-      throw new Error('Script podcast vide');
-    }
-
-    // 2. Nettoyer le texte de chaque segment pour le TTS
-    const cleanedSegments = segments.map(seg => ({
-      ...seg,
-      text: sanitizeTextForTTS(seg.text),
-    }));
-
-    // 3. Calculer le nombre total de caractères
-    const characterCount = cleanedSegments.reduce((sum, seg) => sum + seg.text.length, 0);
-    console.log(`Caractères à générer: ${characterCount}`);
-
-    // 4. Générer l'audio multi-speaker
-    const audioBuffer = await googleTTSClient.synthesizeMultiSpeaker(cleanedSegments);
-
-    const cost = googleTTSClient.calculateCost(characterCount);
-    console.log(` Coût estimé: $${cost.toFixed(4)}`);
-
-    return { audioBuffer, characterCount, cost };
-  } catch (error) {
-    console.error(' Erreur génération audio podcast:', error.message);
-    throw error;
-  }
-}
-
-/**
- * Génère l'audio pour un article (choix aléatoire entre simple et podcast)
- * @param {object} article - Article avec id, content, etc.
- * @returns {Promise<{filepath: string, format: string, cost: number}>}
+ * Genere le fichier audio MP3 d'un article sous forme de podcast dialogue.
+ *
+ * C'est la fonction appelee par index.js pour chaque article genere.
+ *
+ * @param {object} article         - Article a convertir en audio
+ * @param {string} article.id      - Identifiant unique (sert a nommer les fichiers)
+ * @param {string} article.content - Contenu textuel de l'article
+ *
+ * @returns {Promise<{filepath: string, format: string}>}
+ *   filepath : chemin du MP3 genere dans ./temp/
+ *   format   : toujours 'podcast' (dialogue Lea/Alex)
+ *
+ * @throws {Error} Si l'une des trois etapes echoue (les erreurs remontent a index.js)
  */
 export async function generateAudioForArticle(article) {
-  const format = 'simple';
-
-  let result = await generateSimpleAudio(article);
-
-  // Sauvegarder temporairement le fichier
-  const tempDir = './temp';
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
+  // Creer le dossier temporaire s'il n'existe pas encore
+  if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR, { recursive: true });
   }
 
-  const filename = `article_${article.id}_${format}.mp3`;
-  const filepath = path.join(tempDir, filename);
+  // -------------------------------------------------------------------------
+  // ETAPE 1 : Generation du script dialogue avec Claude
+  // -------------------------------------------------------------------------
+  // Claude recoit le contenu de l'article et produit un transcript structure :
+  //   Lea: [replique]
+  //   Alex: [replique]
+  //   ...
+  // Le transcript est valide (8-14 repliques, format strict) avant d'etre retourne.
+  // La validation est faite dans dialog-script-generator.js.
+  console.log('\n   [1/3] Generation du script dialogue (Claude)...');
 
-  await googleTTSClient.saveToFile(result.audioBuffer, filepath);
+  const transcript = await generateDialogScriptFromArticle(article);
+  const lineCount = transcript.split('\n').filter(Boolean).length;
+  console.log(`         OK — ${lineCount} repliques generees`);
+
+  // -------------------------------------------------------------------------
+  // ETAPE 2 : Synthese vocale avec Gemini TTS
+  // -------------------------------------------------------------------------
+  // buildDialogTtsPrompt enveloppe le transcript dans un "Audio Profile" qui
+  // donne a Gemini TTS des instructions sur le style, le ton et les personnages.
+  //
+  // Un seul appel API suffit pour tout le dialogue : Gemini identifie les speakers
+  // via leur nom dans le transcript ("Lea:", "Alex:") et applique automatiquement
+  // la voix correspondante (configuree dans DEFAULT_SPEAKER_VOICE_CONFIGS).
+  //
+  // La reponse est du PCM brut : pas de header, pas de compression — juste
+  // des echantillons audio 16-bit a 24000 Hz en mono.
+  console.log('\n   [2/3] Synthese vocale multi-speaker (Gemini TTS)...');
+
+  const ttsPrompt = buildDialogTtsPrompt(transcript);
+
+  const { pcmBuffer, sampleRateHz, channels } = await generatePcmWithGeminiTts({
+    prompt: ttsPrompt,
+    speakerVoiceConfigs: DEFAULT_SPEAKER_VOICE_CONFIGS,
+  });
+
+  console.log(`         OK — ${(pcmBuffer.length / 1024).toFixed(0)} KB PCM recus`);
+
+  // -------------------------------------------------------------------------
+  // ETAPE 3 : Conversion PCM -> MP3 via ffmpeg
+  // -------------------------------------------------------------------------
+  // ffmpeg a besoin d'un fichier en entree (pas d'un Buffer en memoire).
+  // On ecrit donc le PCM sur disque, on convertit, puis on supprime le PCM.
+  // Seul le MP3 final est conserve pour l'upload Supabase.
+  console.log('\n   [3/3] Conversion PCM -> MP3 (ffmpeg)...');
+
+  const pcmPath = path.join(TEMP_DIR, `article_${article.id}.pcm`);
+  const mp3Path = path.join(TEMP_DIR, `article_${article.id}_podcast.mp3`);
+
+  // Ecriture du PCM brut (etape intermediaire requise par ffmpeg)
+  fs.writeFileSync(pcmPath, pcmBuffer);
+
+  // Conversion vers MP3 128kbps avec les parametres Gemini TTS (24000 Hz, mono)
+  pcmToMp3({ pcmPath, mp3Path, sampleRateHz, channels });
+
+  // Suppression du PCM intermediaire — on n'en a plus besoin
+  fs.unlinkSync(pcmPath);
+
+  console.log(`         OK — MP3 pret: ${mp3Path}`);
 
   return {
-    filepath,
-    format,
-    cost: result.cost,
-    characterCount: result.characterCount,
+    filepath: mp3Path,
+    format: 'podcast', // Dialogue Lea/Alex, distinct d'une simple lecture TTS
   };
 }

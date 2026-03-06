@@ -1,6 +1,16 @@
 {
   "name": "upnews-backend",
   "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node test-claude.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@google-cloud/aiplatform": "^6.2.0",

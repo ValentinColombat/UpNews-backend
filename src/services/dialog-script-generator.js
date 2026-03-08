@@ -1,16 +1,6 @@
-/**
- * dialog-script-generator.js
- *
- * Genere un script de dialogue podcast (format Lea/Alex) a partir d'un article,
- * en utilisant Claude comme moteur de generation de texte.
- *
- * Responsabilite unique : produire un transcript valide au format strict :
- *   Léa: [replique]
- *   Alex: [replique]
- *   ...
- *
- * Ce transcript est ensuite passe a gemini-tts-client.js pour la synthese vocale.
- */
+//Genere un script de dialogue podcast (format Lea/Alex) a partir d'un article,
+// en utilisant Claude comme moteur de generation de texte.
+
 
 import Anthropic from '@anthropic-ai/sdk';
 import { MODELS } from '../config/models.js';
@@ -20,22 +10,8 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-/**
- * Genere un script dialogue "podcast" depuis le contenu d'un article.
- *
- * Le script met en scene deux presentateurs :
- *   - Lea  : animatrice enthousiaste, porte l'emotion et la positivite
- *   - Alex : expert contextuel, apporte la profondeur et le recul
- *
- * Le prompt demande a Claude un format STRICT (une replique par ligne,
- * prefixe "Lea:" ou "Alex:") pour que Gemini TTS puisse identifier
- * automatiquement quel speaker doit prononcer quelle replique.
- *
- * @param {object} article          - Article genere par article-generator.js
- * @param {string} article.content  - Contenu complet de l'article (requis)
- * @returns {Promise<string>} Transcript valide, ex: "Lea: ...\nAlex: ..."
- * @throws {Error} Si le contenu est absent ou si Claude produit un format invalide
- */
+//Genere un script dialogue "podcast" depuis le contenu d'un article.
+
 export async function generateDialogScriptFromArticle(article) {
   if (!article?.content) {
     throw new Error('generateDialogScriptFromArticle: article.content manquant');
@@ -52,7 +28,8 @@ Transforme cet article en dialogue naturel entre deux présentateurs français :
 - Alex : expert contextuel, posé, apporte la profondeur (bienveillant)
 
 RÈGLES STRICTES :
-- 8 à 12 échanges (répliques courtes, 2-3 phrases max chacune)
+- EXACTEMENT entre 8 et 12 répliques, JAMAIS moins de 8 — compte tes répliques avant de répondre
+- Répliques courtes : 2-3 phrases max chacune
 - Commencer par Léa qui annonce la bonne nouvelle
 - Terminer par Léa sur une note d'espoir
 - Ton : informatif ET optimiste, jamais anxiogène
@@ -61,12 +38,7 @@ RÈGLES STRICTES :
 - Format EXACT : une réplique par ligne, uniquement :
   Léa: ...
   Alex: ...
-
-RÈGLE AUDIO (ce script sera lu par un TTS, minimise les apostrophes) :
-- Reformule quand une alternative naturelle existe (ex: "c'est" -> "cela représente")
-- Garde les élisions obligatoires (d'eau, l'air, l'eau, l'homme)
-- Français correct > suppression d'apostrophes
-
+  
 ARTICLE :
 ${article.content}
 `;
@@ -74,7 +46,7 @@ ${article.content}
   try {
     const message = await anthropic.messages.create({
       model: MODELS.articleGeneration,
-      max_tokens: 1200,
+      max_tokens: 1800,
       messages: [{ role: 'user', content: prompt }],
     });
 

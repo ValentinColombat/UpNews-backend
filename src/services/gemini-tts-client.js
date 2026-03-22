@@ -20,9 +20,9 @@ import { GoogleGenAI } from '@google/genai';
 // Singleton : instancie une seule fois au chargement du module.
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// ---------------------------------------------------------------------------
+
 // Voix et configuration des speakers UpNews
-// ---------------------------------------------------------------------------
+
 // Ces voix ont ete choisies parmi les voix "prebuilt" Gemini TTS pour leur
 // naturel en francais et leur adequation avec les personnages du podcast.
 export const UPNEWS_VOICES = {
@@ -38,20 +38,8 @@ export const DEFAULT_SPEAKER_VOICE_CONFIGS = [
   { speaker: 'Alex', voiceName: UPNEWS_VOICES.ALEX },
 ];
 
-// ---------------------------------------------------------------------------
-// buildDialogTtsPrompt
-// ---------------------------------------------------------------------------
+// Formate un transcript dialogue brut en prompt complet pour Gemini TTS.
 
-/**
- * Formate un transcript dialogue brut en prompt complet pour Gemini TTS.
- *
- * Gemini TTS supporte les "Director's Notes" : des instructions de style
- * qui guident le modele sur le ton, l'accent et le rythme. Sans ce wrapper,
- * la synthese est correcte mais moins naturelle et expressive.
- *
- * @param {string} dialogTranscript - Transcript au format "Lea: ...\nAlex: ..."
- * @returns {string} Prompt complet pret a envoyer a l'API
- */
 export function buildDialogTtsPrompt(dialogTranscript) {
   return `
 # AUDIO PROFILE: Format Dialogue UpNews
@@ -72,28 +60,16 @@ ${dialogTranscript}
 `.trim();
 }
 
-// ---------------------------------------------------------------------------
-// Utilitaires internes
-// ---------------------------------------------------------------------------
+
+// Utilitaires 
+
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/**
- * Execute une fonction async avec retry et backoff exponentiel + jitter.
- *
- * Pourquoi ? L'API Gemini peut retourner des erreurs 429 (rate limit) ou
- * des erreurs transitoires 5xx. Le backoff exponentiel + jitter evite de
- * surcharger l'API si plusieurs articles sont traites en parallele.
- *
- * Exemple de delais : 1s, 2s, 4s, 8s, 16s (+ jitter aleatoire <= 250ms)
- *
- * @param {Function} fn - Fonction async a executer
- * @param {object} opts
- * @param {number} opts.retries    - Nombre max de tentatives (defaut: 5)
- * @param {number} opts.baseDelayMs - Delai de base en ms (defaut: 1000)
- */
+// Execute une fonction async avec retry et backoff exponentiel + jitter.
+ 
 async function withRetry(fn, { retries = 5, baseDelayMs = 1000 } = {}) {
   let lastErr;
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -114,17 +90,8 @@ async function withRetry(fn, { retries = 5, baseDelayMs = 1000 } = {}) {
   throw lastErr;
 }
 
-/**
- * Extrait le contenu audio base64 de la reponse Gemini.
- *
- * La reponse est structuree ainsi :
- *   response.candidates[0].content.parts[N].inlineData.data  <- base64 audio
- *
- * On cherche la premiere "part" qui contient un inlineData.data non vide.
- *
- * @param {object} response - Reponse brute de l'API Gemini
- * @returns {string|null} Chaine base64 de l'audio, ou null si absente
- */
+// Extrait le contenu audio base64 de la reponse Gemini.
+
 function extractAudioBase64(response) {
   const parts = response?.candidates?.[0]?.content?.parts;
   if (!Array.isArray(parts)) return null;
@@ -136,24 +103,11 @@ function extractAudioBase64(response) {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// Fonction principale exportee
-// ---------------------------------------------------------------------------
 
-/**
- * Synthetise un dialogue multi-speaker avec Gemini TTS.
- *
- * IMPORTANT : La sortie est du PCM brut (s16le, mono, 24000 Hz).
- * Ce n'est PAS un MP3 lisible directement.
- * La conversion PCM -> MP3 est effectuee par audio-converter.js (ffmpeg).
- *
- * @param {object} params
- * @param {string} params.prompt              - Prompt complet (voir buildDialogTtsPrompt)
- * @param {Array}  params.speakerVoiceConfigs  - [{speaker, voiceName}, ...]
- * @param {string} [params.model]             - Modele Gemini TTS a utiliser
- *
- * @returns {Promise<{pcmBuffer: Buffer, sampleRateHz: number, channels: number}>}
- */
+// Fonction principale 
+
+// Synthetise un dialogue multi-speaker avec Gemini TTS.
+
 export async function generatePcmWithGeminiTts({
   prompt,
   speakerVoiceConfigs = DEFAULT_SPEAKER_VOICE_CONFIGS,

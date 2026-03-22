@@ -27,20 +27,29 @@ Transforme cet article en dialogue naturel entre deux présentateurs français :
 - Léa : animatrice enthousiaste, accessible, porte l'émotion (optimiste)
 - Alex : expert contextuel, posé, apporte la profondeur (bienveillant)
 
-RÈGLES STRICTES :
-- EXACTEMENT entre 8 et 12 répliques, JAMAIS moins de 8 — compte tes répliques avant de répondre
+RÈGLES STRICTES DE FORMAT :
+- NOMBRE DE RÉPLIQUES : MINIMUM 8, MAXIMUM 12 répliques
+- AVANT de finaliser ta réponse, COMPTE tes répliques ligne par ligne
+- Si tu en as moins de 8, AJOUTE des échanges pour atteindre 8 minimum
 - Répliques courtes : 2-3 phrases max chacune
 - Commencer par Léa qui annonce la bonne nouvelle
 - Terminer par Léa sur une note d'espoir
 - Ton : informatif ET optimiste, jamais anxiogène
 - Durée cible à l'oral : 2 à 3 minutes
-- AUCUN titre, AUCUNE balise, AUCUNE liste, AUCUN markdown, AUCUNE intro du type "Bonjour"
+
+FORMAT DE SORTIE OBLIGATOIRE :
+- AUCUN titre, AUCUNE balise, AUCUNE liste, AUCUN markdown
+- AUCUNE intro du type "Bonjour", "Salut", ou formule d'accueil
 - Format EXACT : une réplique par ligne, uniquement :
-  Léa: ...
-  Alex: ...
-  
-ARTICLE :
+  Léa: [texte de la réplique]
+  Alex: [texte de la réplique]
+  Léa: [texte de la réplique]
+  ...
+
+ARTICLE À TRANSFORMER :
 ${article.content}
+
+RAPPEL : Vérifie que tu as AU MOINS 8 répliques avant de répondre.
 `;
 
   try {
@@ -94,10 +103,10 @@ function normalizeAndValidateDialogTranscript(raw) {
   const lines = cleaned.split('\n').filter(Boolean);
 
   // Validation du nombre de repliques
-  // On tolere jusqu'a 14 car Claude depasse parfois legerement la consigne des 8-12
-  if (lines.length < 8 || lines.length > 14) {
+  // On tolere de 7 a 14 lignes (cible 8-12, mais Claude peut varier)
+  if (lines.length < 7 || lines.length > 14) {
     throw new Error(
-      `Transcript dialogue invalide: ${lines.length} lignes (attendu 8-12, tolere jusqu\'a 14).\nSortie brute:\n${cleaned}`
+      `Transcript dialogue invalide: ${lines.length} lignes (attendu 8-12, tolere 7-14).\nSortie brute:\n${cleaned}`
     );
   }
 

@@ -24,7 +24,7 @@ Paragraphe 4 optionnel (2-3 lignes) : Perspective d'avenir ou élargissement sob
 
 DERNIÈRE PHRASE : Conclusion factuelle. Courte. Percutante. Pas de morale.
 
-CONTRAINTES : 
+CONTRAINTES :
 - Titre sur la première ligne avec le préfixe [TITRE]
 - Contenu commence après [CONTENU]
 - 250-280 mots MAXIMUM pour le contenu
@@ -33,18 +33,6 @@ CONTRAINTES :
 - Ligne vide entre chaque paragraphe pour aérer
 - Ton journalistique professionnel : précis, sobre, élégant
 - Pas de sensationnalisme
-
-RÈGLE AUDIO (cet article sera lu par un TTS, minimise les apostrophes) :
-- REFORMULE quand une alternative naturelle existe :
-  "c'est" → "cela représente", "voici", "il s'agit de"
-  "l'écologie" → "le domaine écologique", "cette discipline"
-  "l'innovation" → "cette innovation"
-  "d'énergie" → "en énergie", "de cette énergie"
-  "n'est pas" → "ne se révèle pas", restructure la phrase
-  "qu'il" → "que ce dernier", restructure la phrase
-- GARDE l'apostrophe quand la supprimer casserait le français :
-  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
-- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
 
 INTERDICTIONS :
 - Les sous-titres dans le corps de l'article
@@ -86,18 +74,6 @@ Section 3 (SANS titre) - L'impact
 
 CHUTE (1-2 phrases courtes)
 Une phrase finale qui résonne. Factuelle, pas moralisante. Un constat sobre.
-
-RÈGLE AUDIO (cet article sera lu par un TTS, minimise les apostrophes) :
-- REFORMULE quand une alternative naturelle existe :
-  "c'est" → "cela représente", "voici", "il s'agit de"
-  "l'écologie" → "le domaine écologique", "cette discipline"
-  "l'innovation" → "cette innovation"
-  "d'énergie" → "en énergie", "de cette énergie"
-  "n'est pas" → "ne se révèle pas", restructure la phrase
-  "qu'il" → "que ce dernier", restructure la phrase
-- GARDE l'apostrophe quand la supprimer casserait le français :
-  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
-- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
 
 CONTRAINTES ABSOLUES :
 - Titre sur la première ligne avec le préfixe [TITRE]
@@ -151,24 +127,12 @@ MISE EN PAGE OBLIGATOIRE :
 - Chaque bloc Q&A doit être séparé par une LIGNE VIDE
 - Format exact :
   Question ?
-  
-  Réponse ici sur plusieurs lignes si nécessaire.
-  
-  Question suivante ?
-  
-  Réponse suivante.
 
-RÈGLE AUDIO (cet article sera lu par un TTS, minimise les apostrophes) :
-- REFORMULE quand une alternative naturelle existe :
-  "c'est" → "cela représente", "voici", "il s'agit de"
-  "l'écologie" → "le domaine écologique", "cette discipline"
-  "l'innovation" → "cette innovation"
-  "d'énergie" → "en énergie", "de cette énergie"
-  "n'est pas" → "ne se révèle pas", restructure la phrase
-  "qu'il" → "que ce dernier", restructure la phrase
-- GARDE l'apostrophe quand la supprimer casserait le français :
-  "d'eau", "l'air", "l'eau", "l'homme" → ces élisions sont OBLIGATOIRES, ne jamais écrire "de eau" ou "la air"
-- RÈGLE D'OR : un français correct prime toujours sur l'absence d'apostrophe
+  Réponse ici sur plusieurs lignes si nécessaire.
+
+  Question suivante ?
+
+  Réponse suivante.
 
 CONTRAINTES ABSOLUES :
 - Titre sur la première ligne avec le préfixe [TITRE]

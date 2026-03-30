@@ -17,9 +17,11 @@ export async function generateDialogScriptFromArticle(article) {
     throw new Error('generateDialogScriptFromArticle: article.content manquant');
   }
 
-  // Ce prompt est concu pour obtenir un format de sortie tres predictible.
-  // Les regles strictes reduisent le besoin de post-traitement et evitent
-  // les hallucinations de format (markdown parasite, intro "Bonjour", etc.)
+  // TODO SECURITY [P0 - HIGH-1] PROMPT INJECTION via contenu d'article non sanitisé.
+  // article.content est le texte généré par Claude depuis des données RSS. Bien qu'il
+  // soit une sortie Claude (donc déjà filtrée), il peut contenir du contenu RSS original.
+  // Fix recommandé : encadrer article.content dans des balises <article_content>...</article_content>
+  // et instruire Claude d'ignorer toute instruction qui s'y trouverait.
   const prompt = `Tu es un producteur de podcast pour UpNews.
 
 Transforme cet article en dialogue naturel entre deux présentateurs français :

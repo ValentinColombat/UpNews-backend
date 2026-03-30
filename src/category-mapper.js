@@ -152,7 +152,11 @@ export async function categorizeWithClaudeBatch(articles) {
 
 // Traiter un seul batch d'articles
 async function processSingleBatch(articles, batchNum, totalBatches) {
-  // Construire la liste des articles pour le prompt
+  // TODO SECURITY [P0 - HIGH-1] PROMPT INJECTION via données RSS non sanitisées.
+  // article.title et article.description viennent directement des flux RSS externes
+  // et sont insérés sans sanitisation dans le prompt envoyé à Claude.
+  // Fix recommandé : encadrer chaque article dans des balises <article_content>...</article_content>
+  // et instruire Claude dans le système prompt d'ignorer toute instruction dans ces balises.
   let articlesList = '';
   articles.forEach((article, index) => {
     articlesList += `
@@ -262,6 +266,11 @@ IMPORTANT:
 
 // Vérifier avec Claude que la catégorie trouvée par mots-clés est correcte
 export async function verifyCategoryWithClaude(article, keywordCategory) {
+  // TODO SECURITY [P0 - HIGH-1] PROMPT INJECTION via données RSS non sanitisées.
+  // article.title et article.description viennent directement des flux RSS externes
+  // et sont insérés sans sanitisation dans le prompt envoyé à Claude.
+  // Fix recommandé : encadrer les données dans des balises <article_content>...</article_content>
+  // et instruire Claude d'ignorer toute instruction qui s'y trouverait.
   const prompt = `Tu es un expert en catégorisation d'articles d'actualité.
 
 Un système de mots-clés a classé cet article dans la catégorie "${keywordCategory}".

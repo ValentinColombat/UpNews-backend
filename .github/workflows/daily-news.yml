@@ -26,6 +26,22 @@ jobs:
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
+      # TODO SECURITY [P1 - HIGH-3] CREDENTIALS GOOGLE CLOUD ÉCRITES SUR DISQUE SANS PROTECTION.
+      # Problèmes actuels :
+      #   1. Le fichier est créé dans le répertoire de code (src/config/), risque d'être commité
+      #      accidentellement si un dev ajoute un step "git add ." après.
+      #   2. Permissions fichier non restreintes (lisible par tous les processus du runner).
+      #   3. Pas de nettoyage du fichier après exécution (step post manquant).
+      # Fix recommandé :
+      #   - Écrire dans /tmp/ au lieu de src/config/ :
+      #       run: |
+      #         echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > /tmp/google-credentials.json
+      #         chmod 600 /tmp/google-credentials.json
+      #   - Mettre à jour GOOGLE_APPLICATION_CREDENTIALS: /tmp/google-credentials.json
+      #   - Ajouter un step de nettoyage :
+      #       - name: Cleanup credentials
+      #         if: always()
+      #         run: rm -f /tmp/google-credentials.json
       - name: Setup Google credentials
         run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > src/config/google-cloud-credentials.json
 
@@ -36,5 +52,9 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_APPLICATION_CREDENTIALS: src/config/google-cloud-credentials.json
+          # TODO SECURITY [P1 - HIGH-2] GOOGLE_CLOUD_PROJECT_ID HARDCODÉ EN CLAIR.
+          # L'ID de projet GCP est visible publiquement dans ce fichier versionné.
+          # Fix : le déplacer vers les secrets GitHub et remplacer par :
+          #   GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
           GOOGLE_CLOUD_PROJECT_ID: upnews-auth
         run: node src/index.js

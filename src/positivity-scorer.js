@@ -49,7 +49,11 @@ export async function scoreArticlesByPositivity(articles, category) {
 
   console.log(`\n🎯 Scoring de positivité pour ${category} (${articles.length} articles)`);
 
-  // Construire le prompt avec tous les articles
+  // TODO SECURITY [P0 - HIGH-1] PROMPT INJECTION via données RSS non sanitisées.
+  // article.title et article.description viennent directement des flux RSS externes
+  // et sont insérés sans sanitisation dans le prompt envoyé à Claude.
+  // Fix recommandé : encadrer chaque article dans des balises <article_content>...</article_content>
+  // et instruire Claude dans le système prompt d'ignorer toute instruction dans ces balises.
   let articlesText = '';
   articles.forEach((article, index) => {
     articlesText += `

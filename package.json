@@ -14,9 +14,10 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@google-cloud/aiplatform": "^6.2.0",
-"@supabase/supabase-js": "^2.86.2",
+    "@google/genai": "latest",
+    "@supabase/supabase-js": "^2.86.2",
     "dotenv": "^17.2.3",
     "rss-parser": "^3.13.0",
-    "@google/genai": "latest"
+    "sharp": "^0.34.5"
   }
 }

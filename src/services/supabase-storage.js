@@ -1,5 +1,6 @@
 import { supabase } from '../supabase-client.js';
 import fs from 'fs';
+import sharp from 'sharp';
 
 /**
  * Upload un fichier image vers Supabase Storage
@@ -12,17 +13,35 @@ export async function uploadImageToSupabase(filepath, articleId, publishedDate) 
   try {
     console.log(`\nUpload image vers Supabase Storage...`);
 
-    // Lire le fichier
-    const fileBuffer = fs.readFileSync(filepath);
+    // Lire et compresser l'image (cible ~200KB)
+    const rawBuffer = fs.readFileSync(filepath);
+    const originalKB = Math.round(rawBuffer.length / 1024);
+
+    let fileBuffer, contentType, ext;
+    try {
+      fileBuffer = await sharp(rawBuffer)
+        .resize({ width: 1024, withoutEnlargement: true })
+        .jpeg({ quality: 75 })
+        .toBuffer();
+      contentType = 'image/jpeg';
+      ext = 'jpg';
+      const compressedKB = Math.round(fileBuffer.length / 1024);
+      console.log(`Compression image: ${originalKB}KB -> ${compressedKB}KB`);
+    } catch (sharpError) {
+      console.warn(`Compression échouée (${sharpError.message}), upload du fichier original (${originalKB}KB)`);
+      fileBuffer = rawBuffer;
+      contentType = 'image/png';
+      ext = 'png';
+    }
 
     // Construire le chemin dans le bucket
-    const storagePath = `${publishedDate}/article_${articleId}.png`;
+    const storagePath = `${publishedDate}/article_${articleId}.${ext}`;
 
     // Upload vers Supabase
     const { data, error } = await supabase.storage
       .from('article-images')
       .upload(storagePath, fileBuffer, {
-        contentType: 'image/png',
+        contentType,
         upsert: false,
       });
 

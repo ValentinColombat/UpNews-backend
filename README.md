@@ -7,7 +7,7 @@ Chaque nuit (4h heure francaise), un workflow GitHub Actions :
 2. Selectionne le meilleur article par categorie (scoring positivite via Claude)
 3. Redige un article optimise avec Claude
 4. Genere un podcast audio dialogue Lea/Alex (Gemini TTS)
-5. Genere une image illustrative (Google Imagen 3)
+5. Genere une image illustrative (Gemini 2.5 Flash Image)
 6. Publie tout dans Supabase (base de donnees + stockage fichiers)
 
 ---
@@ -32,7 +32,7 @@ src/
     ├── gemini-tts-client.js        # Synthese vocale multi-speaker (Gemini TTS)
     ├── audio-converter.js          # Conversion PCM brut -> MP3 (ffmpeg)
     ├── image-generator.js          # Orchestrateur generation image
-    ├── google-imagen-client.js     # Generation d'images (Google Imagen 3 via Vertex AI)
+    ├── gemini-image-client.js      # Generation d'images (Gemini 2.5 Flash via Vertex AI)
     └── supabase-storage.js         # Upload fichiers vers Supabase Storage
 
 scripts/
@@ -81,6 +81,44 @@ Article (texte brut)
         v
 MP3 final -> upload Supabase Storage -> URL stockee dans la DB
 ```
+
+---
+
+## Pipeline image — comment ca marche
+
+```
+Article (texte brut)
+        |
+        v
+[ETAPE 1] image-generator.js
+  Claude Haiku genere un prompt visuel court (1 phrase, max 15 mots)
+  decrivant une scene concrete et positive en anglais.
+
+        |
+        v
+[ETAPE 2] gemini-image-client.js
+  Gemini 2.5 Flash genere l'image depuis le prompt visuel + style UpNews :
+    "soft hand-drawn editorial illustration, warm and hopeful mood,
+     pastel color palette, gentle brushstrokes, minimalist composition..."
+  La reponse est un buffer PNG encode en base64.
+
+        |
+        v
+PNG -> upload Supabase Storage -> URL stockee dans la DB
+```
+
+### Migration Imagen 3 → Gemini 2.5 Flash
+
+| Critere | Imagen 3 (supprime) | Gemini 2.5 Flash (actuel) |
+|---|---|---|
+| Modele | `imagen-3.0-generate-001` | `gemini-2.5-flash-image` |
+| SDK | `@google-cloud/aiplatform` | `@google/genai` (deja installe pour TTS) |
+| Cout par image | $0.03 | ~$0.039 |
+| Authentification | Service Account JSON | Service Account JSON (identique) |
+| Fin de vie | **30 juin 2026** | Actif |
+
+La migration a ete realisee le 22 avril 2026. Le SDK `@google/genai` etant
+deja present pour le TTS, aucune nouvelle dependance n'a ete ajoutee.
 
 ### Pourquoi Gemini TTS a la place de Google TTS ?
 
@@ -133,7 +171,7 @@ cp .env.example .env
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Anthropic (Claude) | Articles, scoring, categorisation, script dialogue |
 | `GEMINI_API_KEY` | Google Gemini | Synthese vocale TTS |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Google Cloud | Generation images (Vertex AI / Imagen 3) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Google Cloud | Generation images (Vertex AI / Gemini 2.5 Flash) |
 | `GOOGLE_CLOUD_PROJECT_ID` | Google Cloud | ID du projet Vertex AI |
 | `SUPABASE_URL` | Supabase | URL du projet |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase | Cle d'acces (role service) |
@@ -179,6 +217,17 @@ node scripts/test-dialog-script.js
 
 Genere et affiche un transcript dialogue Lea/Alex depuis un article de test.
 Utilise pour valider le prompt Claude et le format de sortie avant de lancer le TTS.
+
+### Tester la generation d'image
+
+```bash
+node scripts/test-gemini-image.js
+```
+
+Genere une image de test avec un prompt fixe ("A community garden with people planting vegetables together"),
+sauvegarde le resultat dans `./temp/test-gemini-image.png` et affiche le cout estime.
+
+**Prerequis** : `GOOGLE_APPLICATION_CREDENTIALS` et `GOOGLE_CLOUD_PROJECT_ID` dans `.env`.
 
 ### Tester la synthese vocale complete (TTS + conversion MP3)
 
@@ -240,7 +289,7 @@ Table `articles` :
 | Runtime | Node.js 20 (ES Modules) |
 | Generation texte | Anthropic Claude (Sonnet + Haiku) |
 | Synthese vocale | Google Gemini TTS (`gemini-2.5-flash-preview-tts`) |
-| Generation images | Google Imagen 3 (via Vertex AI) |
+| Generation images | Gemini 2.5 Flash Image (via Vertex AI) |
 | Conversion audio | ffmpeg |
 | Base de donnees | Supabase (PostgreSQL) |
 | Stockage fichiers | Supabase Storage |

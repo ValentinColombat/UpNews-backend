@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:ucstrategies.com)",
+      "WebFetch(domain:www.oreateai.com)",
+      "WebFetch(domain:www.nops.io)",
+      "WebFetch(domain:platform.stability.ai)",
+      "WebFetch(domain:intuitionlabs.ai)",
+      "WebFetch(domain:docs.cloud.google.com)"
+    ]
+  }
+}

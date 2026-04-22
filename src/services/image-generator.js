@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { googleImagenClient } from './google-imagen-client.js';
+import { geminiImageClient } from './gemini-image-client.js';
 import fs from 'fs';
 import path from 'path';
 import { MODELS } from '../config/models.js';
@@ -71,8 +71,8 @@ export async function generateImageForArticle(article) {
       // 1. Générer le prompt visuel avec Claude
       const imagePrompt = await generateImagePrompt(article);
 
-      // 2. Générer l'image avec Imagen
-      const imageBuffer = await googleImagenClient.generateImage(imagePrompt);
+      // 2. Générer l'image avec Gemini 2.5 Flash
+      const imageBuffer = await geminiImageClient.generateImage(imagePrompt);
 
       // 3. Sauvegarder temporairement le fichier
       const tempDir = './temp';
@@ -83,10 +83,10 @@ export async function generateImageForArticle(article) {
       const filename = `article_${article.id}_image.png`;
       const filepath = path.join(tempDir, filename);
 
-      await googleImagenClient.saveToFile(imageBuffer, filepath);
+      await geminiImageClient.saveToFile(imageBuffer, filepath);
 
       // 4. Calculer le coût
-      const cost = googleImagenClient.calculateCost(1);
+      const cost = geminiImageClient.calculateCost(1);
       console.log(`Coût image: $${cost.toFixed(4)}`);
 
       return {

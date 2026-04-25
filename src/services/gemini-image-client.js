@@ -32,6 +32,9 @@ class GeminiImageClient {
       contents: prompt,
       config: {
         responseModalities: ['IMAGE'],
+        imageConfig: {
+          aspectRatio: '16:9',
+        },
       },
     });
 

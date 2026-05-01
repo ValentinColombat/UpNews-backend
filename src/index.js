@@ -6,6 +6,7 @@ import { generateImageForArticle } from './services/image-generator.js';
 import { uploadAudioToSupabase, uploadImageToSupabase } from '../src/services/supabase-storage.js';
 import { scoreAllCategories } from './positivity-scorer.js';
 import { verifyCategoryWithClaude, logCategoryMismatch, logSelectedArticle } from './category-mapper.js';
+import { logRssUsage } from './logger.js';
 
 // Lien Github actif 
 
@@ -126,6 +127,7 @@ async function generateDailyArticles() {
     // Logger les articles sélectionnés pour analyse des sources
     for (const [category, article] of Object.entries(selectedArticles)) {
       await logSelectedArticle(article, category);
+      await logRssUsage(article, category);
     }
 
     console.log(`\nArticles sélectionnés: ${Object.keys(selectedArticles).length} catégories`);

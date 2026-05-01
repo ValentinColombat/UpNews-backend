@@ -2,6 +2,7 @@ node_modules/
 .env
 *.log
 logs/
+!logs/rss-usage.jsonl
 .DS_Store
 src/config/google-cloud-credentials.json
 temp/

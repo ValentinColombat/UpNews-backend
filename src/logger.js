@@ -1,10 +1,27 @@
-import { appendFile, mkdir } from 'fs/promises';
+import { appendFile, mkdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOG_FILE = join(__dirname, '../logs/rss-usage.jsonl');
+
+// Retourne un map { sourceName -> dernière date utilisée (string YYYY-MM-DD) }
+export async function getLastUsedBySource() {
+  if (!existsSync(LOG_FILE)) return {};
+
+  const content = await readFile(LOG_FILE, 'utf8');
+  const lastUsed = {};
+  for (const line of content.split('\n').filter(Boolean)) {
+    try {
+      const { source, date } = JSON.parse(line);
+      if (!lastUsed[source] || date > lastUsed[source]) {
+        lastUsed[source] = date;
+      }
+    } catch {}
+  }
+  return lastUsed;
+}
 
 export async function logRssUsage(article, category) {
   const entry = {

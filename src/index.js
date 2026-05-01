@@ -6,7 +6,12 @@ import { generateImageForArticle } from './services/image-generator.js';
 import { uploadAudioToSupabase, uploadImageToSupabase } from '../src/services/supabase-storage.js';
 import { scoreAllCategories } from './positivity-scorer.js';
 import { verifyCategoryWithClaude, logCategoryMismatch, logSelectedArticle } from './category-mapper.js';
-import { logRssUsage } from './logger.js';
+import { logRssUsage, getLastUsedBySource } from './logger.js';
+import { readFile } from 'fs/promises';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Lien Github actif 
 
@@ -48,13 +53,33 @@ async function generateDailyArticles() {
     const usedUrls = new Set(recentArticles?.map(a => a.source_url) || []);
     console.log(`URLs déjà utilisées dans les 15 derniers jours: ${usedUrls.size}`);
 
+    // Charger les règles de throttle par source
+    const { sources } = JSON.parse(await readFile(join(__dirname, '../data/rss-sources.json'), 'utf8'));
+    const throttleRules = Object.fromEntries(
+      sources.filter(s => s.throttleDays).map(s => [s.name, s.throttleDays])
+    );
+    const lastUsedBySource = await getLastUsedBySource();
+    const today = new Date().toISOString().split('T')[0];
+
     // 4. Filtrer les articles disponibles par catégorie (qualité + non utilisés)
     const availableByCategory = {};
     for (const [category, articles] of Object.entries(groupedNews)) {
       const qualityArticles = articles.filter(article =>
         article.categoryConfidence === 'medium' || article.categoryConfidence === 'high'
       );
-      const availableArticles = qualityArticles.filter(article => !usedUrls.has(article.url));
+      const availableArticles = qualityArticles.filter(article => {
+        if (usedUrls.has(article.url)) return false;
+        const throttleDays = throttleRules[article.source];
+        if (throttleDays && lastUsedBySource[article.source]) {
+          const lastUsed = new Date(lastUsedBySource[article.source]);
+          const diffDays = (new Date(today) - lastUsed) / (1000 * 60 * 60 * 24);
+          if (diffDays < throttleDays) {
+            console.log(`⏱️  ${article.source}: throttle actif (utilisé il y a ${Math.floor(diffDays)}j, limite ${throttleDays}j)`);
+            return false;
+          }
+        }
+        return true;
+      });
       
       if (availableArticles.length > 0) {
         availableByCategory[category] = availableArticles;

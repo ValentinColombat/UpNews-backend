@@ -140,6 +140,66 @@
     {
       "name": "France Info Santé",
       "url": "https://www.francetvinfo.fr/sante.rss"
+    },
+    {
+      "name": "Futura-Sciences",
+      "url": "https://www.futura-sciences.com/rss/actualites.xml"
+    },
+    {
+      "name": "CNRS Le Journal",
+      "url": "https://lejournal.cnrs.fr/rss"
+    },
+    {
+      "name": "Futura-Sciences Espace",
+      "url": "https://www.futura-sciences.com/rss/espace/actualites.xml"
+    },
+    {
+      "name": "Futura-Sciences Santé",
+      "url": "https://www.futura-sciences.com/rss/sante/actualites.xml"
+    },
+    {
+      "name": "Futura-Sciences Tech",
+      "url": "https://www.futura-sciences.com/rss/high-tech/actualites.xml"
+    },
+    {
+      "name": "Inserm",
+      "url": "https://www.inserm.fr/actualite/feed"
+    },
+    {
+      "name": "Vert",
+      "url": "https://vert.eco/feed"
+    },
+    {
+      "name": "Bon Pote",
+      "url": "https://bonpote.com/feed/"
+    },
+    {
+      "name": "Notre-Planete.info",
+      "url": "https://www.notre-planete.info/news/news.xml"
+    },
+    {
+      "name": "Greenpeace France",
+      "url": "https://www.greenpeace.fr/post_news/feed"
+    },
+    {
+      "name": "Le Monde Sciences",
+      "url": "https://www.lemonde.fr/sciences/rss_full.xml"
+    },
+    {
+      "name": "Le Monde Santé",
+      "url": "https://www.lemonde.fr/sante/rss_full.xml"
+    },
+    {
+      "name": "Le Monde Culture",
+      "url": "https://www.lemonde.fr/culture/rss_full.xml"
+    },
+    {
+      "name": "Le Journal des Arts",
+      "url": "https://www.lejournaldesarts.fr/rss.xml"
+    },
+    {
+      "name": "Info Quokka",
+      "url": "https://www.info-quokka.com/feed"
     }
   ]
 }
